@@ -1,6 +1,8 @@
-/node_modules
 /.idea
 /lib
 /log
+node_modules
+package-lock.json
 *.log
 .npmrc
+.DS_Store

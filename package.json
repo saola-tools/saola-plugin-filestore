@@ -16,13 +16,17 @@
     "lib/"
   ],
   "scripts": {
-    "build": "babel ./src -d ./lib",
     "clean": "rm -rf ./lib",
-    "prepublish": "npm run clean && cross-env NODE_ENV=production npm run build",
-    "pretest": "npm run clean && cross-env NODE_ENV=test npm run build",
-    "test": "mocha ./test/{bdd,tdd}/*test.js",
-    "verify": "npm run prepublish && mocha ./test/{bdd,tdd}/*test.js",
-    "eslint": "eslint ./src/ --quiet"
+    "clean-modules": "rm -rf ./node_modules && rm ./package-lock.json",
+    "bootstrap": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
+    "build": "npm exec -- babel ./src -d ./lib",
+    "check": "npm exec -- eslint config src index.js",
+    "check-silent": "npm exec -- eslint --quiet config src index.js",
+    "pretest": "npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-test} npm run build",
+    "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/**/*-test.js",
+    "test": "npm run testOnly",
+    "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-production} npm run build",
+    "verify": "npm run prepublishOnly && npm run testOnly"
   },
   "keywords": [
     "devebot",
@@ -47,6 +51,7 @@
     "mkdirp": "^0.5.6",
     "mv": "^2.1.1",
     "rimraf": "^2.5.2",
+    "slugify": "^1.6.5",
     "uuid": "^2.0.1"
   },
   "devDependencies": {
@@ -60,7 +65,6 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-promise": "^4.0.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "mocha": "^10.1.0"
+    "eslint-plugin-standard": "^4.0.0"
   }
 }

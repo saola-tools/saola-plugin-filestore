@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-const Devebot = require('devebot');
-const Promise = Devebot.require('bluebird');
+const Devebot = require("devebot");
+const Promise = Devebot.require("bluebird");
 
-function Servlet(params = {}) {
+function Servlet (params = {}) {
   const { mongoManipulator } = params;
 
   this.start = function() {

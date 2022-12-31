@@ -1,9 +1,9 @@
 module.exports = {
   plugins: {
     appFilestore: {
-      contextPath: '/filestore',
+      contextPath: "/filestore",
       collections: {
-        FILE: 'files'
+        FILE: "files"
       },
       errorCodes: {
       }
@@ -14,9 +14,9 @@ module.exports = {
       appFilestore: {
         manipulator: {
           connection_options: {
-            host: '127.0.0.1',
-            port: '27017',
-            name: 'filestore'
+            host: "127.0.0.1",
+            port: "27017",
+            name: "filestore"
           }
         }
       }

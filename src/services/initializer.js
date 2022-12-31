@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 function Service (params = {}) {
   const { packageName, sandboxConfig, errorManager } = params;
@@ -9,7 +9,7 @@ function Service (params = {}) {
 }
 
 Service.referenceHash = {
-  errorManager: 'app-errorlist/manager'
-}
+  errorManager: "app-errorlist/manager"
+};
 
 module.exports = Service;
