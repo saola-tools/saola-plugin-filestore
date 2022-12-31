@@ -22,6 +22,14 @@ function Handler (params = {}) {
   const pluginCfg = params.sandboxConfig || {};
   const contextPath = pluginCfg.contextPath || "/filestore";
   const uploadDir = pluginCfg.uploadDir;
+  const collectionName = pluginCfg.collections.FILE;
+
+  this.getFileInfo = function (fileId) {
+    return mongoManipulator.findOneDocument(collectionName, {
+      fileId: fileId,
+      status: "ok"
+    });
+  };
 
   this.getFileUrls = function(fileIds = []) {
     return Promise.map(fileIds, function(fileId) {

@@ -19,13 +19,12 @@ const lodash = Devebot.require("lodash");
 const stringUtil = require("../supports/string-util");
 
 function Service (params = {}) {
-  const { filestoreHandler, mongoManipulator, tracelogService, webweaverService } = params;
+  const { filestoreHandler, tracelogService, webweaverService } = params;
   const L = params.loggingFactory.getLogger();
   const T = params.loggingFactory.getTracer();
 
   const pluginCfg = params.sandboxConfig || {};
   const contextPath = pluginCfg.contextPath || "/filestore";
-  const collectionName = pluginCfg.collections.FILE;
 
   const tmpRootDir = os.tmpdir() + "/devebot/filestore";
   const uploadDir = pluginCfg.uploadDir;
@@ -37,21 +36,21 @@ function Service (params = {}) {
   filestoreRouter.route([
     "/upload"
   ]).post(createUploadMiddleware({
-    L, T, mongoManipulator, contextPath, tmpRootDir, filestoreHandler
+    L, T, filestoreHandler, contextPath, tmpRootDir
   }));
 
   filestoreRouter.route([
     "/download/:fileId",
     "/download/:fileId/:filename"
   ]).get(createDownloadFileMiddleware({
-    L, T, mongoManipulator, collectionName, uploadDir
+    L, T, filestoreHandler, uploadDir
   }));
 
   filestoreRouter.route([
     "/picture/:fileId/:width/:height",
     "/picture/:fileId/:width/:height/:filename"
   ]).get(createShowPictureMiddleware({
-    L, T, mongoManipulator, collectionName, uploadDir, thumbnailDir
+    L, T, filestoreHandler, uploadDir, thumbnailDir
   }));
 
   this.getFilestoreLayer = function() {
@@ -71,7 +70,7 @@ function Service (params = {}) {
 
 function createUploadMiddleware (context) {
   context = context || {};
-  const { L, T, tmpRootDir, contextPath, filestoreHandler, verbose } = context;
+  const { L, T, filestoreHandler, contextPath, tmpRootDir, verbose } = context;
   //
   return function(req, res, next) {
     L.has("silly") && L.log("silly", " - the /upload is requested ...");
@@ -155,7 +154,7 @@ function createUploadMiddleware (context) {
 
 function createDownloadFileMiddleware (context) {
   context = context || {};
-  const { L, T, mongoManipulator, collectionName, uploadDir, verbose } = context;
+  const { L, T, filestoreHandler, uploadDir, verbose } = context;
   //
   return function(req, res, next) {
     let promize = Promise.resolve()
@@ -166,11 +165,7 @@ function createDownloadFileMiddleware (context) {
       if (lodash.isEmpty(req.params.fileId)) {
         return Promise.reject("fileId_is_empty");
       }
-      return mongoManipulator.findOneDocument(
-        collectionName, {
-          fileId: req.params.fileId,
-          status: "ok"
-        });
+      return filestoreHandler.getFileInfo(req.params.fileId);
     })
     .then(function(fileInfo) {
       if (lodash.isEmpty(fileInfo)) {
@@ -201,7 +196,7 @@ function createDownloadFileMiddleware (context) {
 
 function createShowPictureMiddleware (context) {
   context = context || {};
-  const { L, T, mongoManipulator, collectionName, uploadDir, thumbnailDir, verbose } = context;
+  const { L, T, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
   //
   return function(req, res, next) {
     let box = {};
@@ -209,8 +204,8 @@ function createShowPictureMiddleware (context) {
     .then(function() {
       L.has("silly") && L.log("silly", T.add({
         fileId: req.params.fileId,
-        height: req.params.height,
         width: req.params.width,
+        height: req.params.height,
       }).toMessage({
         text: " - /picture/%s/%s/%s is request"
       }));
@@ -229,11 +224,7 @@ function createShowPictureMiddleware (context) {
       box.width = req.params.width;
       box.height = req.params.height;
 
-      return mongoManipulator.findOneDocument(
-        collectionName, {
-          fileId: req.params.fileId,
-          status: "ok"
-        });
+      return filestoreHandler.getFileInfo(req.params.fileId);
     })
     .then(function(fileInfo) {
       if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
@@ -249,9 +240,14 @@ function createShowPictureMiddleware (context) {
       box.fileInfo = fileInfo;
       box.thumbnailFile = path.join(thumbnailDir, box.fileId, util.format("thumbnail-%sx%s", box.width, box.height));
 
+      L.has("silly") && L.log("silly", T.add(box).toMessage({
+        text: " - thumbnailFile: ${thumbnailFile}"
+      }));
+
       return Promise.promisify(function(done) {
         fs.stat(box.thumbnailFile, function(err, stats) {
           if (!err) return done(null, box.thumbnailFile);
+          // Note: ImageMagick Not Found
           easyimage.rescrop({
             src: box.originFile,
             dst: box.thumbnailFile,
@@ -296,8 +292,7 @@ function createShowPictureMiddleware (context) {
 Service.referenceHash = {
   filestoreHandler: "handler",
   tracelogService: "app-tracelog/tracelogService",
-  webweaverService: "app-webweaver/webweaverService",
-  mongoManipulator: "mongojs#manipulator"
+  webweaverService: "app-webweaver/webweaverService"
 };
 
 module.exports = Service;
