@@ -71,7 +71,7 @@ function Service (params = {}) {
 
 function createUploadMiddleware (context) {
   context = context || {};
-  const { L, T, tmpRootDir, contextPath, filestoreHandler } = context;
+  const { L, T, tmpRootDir, contextPath, filestoreHandler, verbose } = context;
   //
   return function(req, res, next) {
     L.has("silly") && L.log("silly", " - the /upload is requested ...");
@@ -81,7 +81,7 @@ function createUploadMiddleware (context) {
       tmpDir: path.join(tmpRootDir, tmpId)
     };
 
-    Promise.resolve()
+    let promize = Promise.resolve()
     .then(function() {
       L.has("silly") && L.log("silly", T.add({ tmpDir: ctx.tmpDir }).toMessage({
         text: " - the tmpDir: ${tmpDir}"
@@ -148,15 +148,17 @@ function createUploadMiddleware (context) {
         });
       }
     });
+    //
+    return verbose ? promize : undefined;
   };
 }
 
 function createDownloadFileMiddleware (context) {
   context = context || {};
-  const { L, T, mongoManipulator, collectionName, uploadDir } = context;
+  const { L, T, mongoManipulator, collectionName, uploadDir, verbose } = context;
   //
   return function(req, res, next) {
-    Promise.resolve()
+    let promize = Promise.resolve()
     .then(function() {
       L.has("silly") && L.log("silly", T.add({ fileId: req.params.fileId }).toMessage({
         text: " - /download/:fileId is request: ${fileId}"
@@ -192,16 +194,18 @@ function createDownloadFileMiddleware (context) {
     .catch(function(err) {
       res.status(404).send("Error: " + JSON.stringify(err));
     });
+    //
+    return verbose ? promize : undefined;
   };
 }
 
 function createShowPictureMiddleware (context) {
   context = context || {};
-  const { L, T, mongoManipulator, collectionName, uploadDir, thumbnailDir } = context;
+  const { L, T, mongoManipulator, collectionName, uploadDir, thumbnailDir, verbose } = context;
   //
   return function(req, res, next) {
     let box = {};
-    Promise.resolve()
+    let promize = Promise.resolve()
     .then(function() {
       L.has("silly") && L.log("silly", T.add({
         fileId: req.params.fileId,
@@ -284,6 +288,8 @@ function createShowPictureMiddleware (context) {
     .catch(function(err) {
       res.status(404).send("Error: " + JSON.stringify(err));
     });
+    //
+    return verbose ? promize : undefined;
   };
 }
 
