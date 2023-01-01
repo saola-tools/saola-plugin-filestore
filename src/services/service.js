@@ -85,7 +85,7 @@ function createUploadMiddleware (context) {
       L.has("silly") && L.log("silly", T.add({ tmpDir: ctx.tmpDir }).toMessage({
         text: " - the tmpDir: ${tmpDir}"
       }));
-      return Promise.promisify(mkdirp)(ctx.tmpDir);
+      return createDir(ctx.tmpDir);
     })
     .then(function() {
       return Promise.promisify(function(done) {
@@ -95,21 +95,21 @@ function createUploadMiddleware (context) {
         form.uploadDir = ctx.tmpDir;
         form.keepExtensions = true;
         form
-          .on("field", function(field, value) {
-            L.has("silly") && L.log("silly", " - formidable trigger a field: %s", field);
-            result.fields[field] = value;
-          })
           .on("file", function(field, value) {
             L.has("silly") && L.log("silly", " - formidable trigger a file: %s", field);
             result.files[field] = value;
           })
-          .on("end", function() {
-            L.has("silly") && L.log("silly", " -> upload has done");
-            done(null, result);
+          .on("field", function(field, value) {
+            L.has("silly") && L.log("silly", " - formidable trigger a field: %s", field);
+            result.fields[field] = value;
           })
           .on("error", function(err) {
             L.has("silly") && L.log("silly", " -> upload has error: %s", JSON.stringify(err));
             done(err);
+          })
+          .on("end", function() {
+            L.has("silly") && L.log("silly", " -> upload has done");
+            done(null, result);
           });
 
         form.parse(req);
@@ -138,13 +138,7 @@ function createUploadMiddleware (context) {
     })
     .finally(function() {
       if (ctx.tmpDir.match(tmpRootDir)) {
-        rimraf(ctx.tmpDir, function(err) {
-          if (err) {
-            L.has("silly") && L.log("silly", " - the /upload cleanup has been error: %s", err);
-          } else {
-            L.has("silly") && L.log("silly", " - the /upload cleanup has been successful");
-          }
-        });
+        removeDir.bind({L, T})(ctx.tmpDir);
       }
     });
     //
@@ -171,20 +165,11 @@ function createDownloadFileMiddleware (context) {
       if (lodash.isEmpty(fileInfo)) {
         return Promise.reject("fileId_not_found");
       }
-      let filename = fileInfo.name || path.basename(fileInfo.path);
-      let filepath = path.join(uploadDir, fileInfo.fileId, fileInfo.name);
-      let mimetype = mime.lookup(fileInfo.path);
-      L.has("silly") && L.log("silly", " - filename: %s", filename);
-      L.has("silly") && L.log("silly", " - filepath: %s", filepath);
-      L.has("silly") && L.log("silly", " - mimetype: %s", mimetype);
-      let originalName = stringUtil.slugify(filename);
-      res.setHeader("Content-disposition", "attachment; filename=" + originalName);
-      res.setHeader("Content-type", mimetype);
-      let filestream = fs.createReadStream(filepath);
-      filestream.on("end", function() {
-        L.has("silly") && L.log("silly", " - the file has been full-loaded");
-      });
-      filestream.pipe(res);
+      const originalName = fileInfo.name || path.basename(fileInfo.path);
+      const filename = stringUtil.slugify(originalName);
+      const filepath = path.join(uploadDir, fileInfo.fileId, fileInfo.name);
+      const mimetype = getMimeType(filepath);
+      return transferFileToResponse.bind({L, T})(filename, filepath, mimetype, res);
     })
     .catch(function(err) {
       res.status(404).send("Error: " + JSON.stringify(err));
@@ -268,18 +253,10 @@ function createShowPictureMiddleware (context) {
       })();
     })
     .then(function(thumbnailFile) {
-      let filename = box.fileInfo.name;
-      let mimetype = mime.lookup(thumbnailFile);
-      L.has("silly") && L.log("silly", " - filename: %s", filename);
-      L.has("silly") && L.log("silly", " - mimetype: %s", mimetype);
-      let originalName = stringUtil.slugify(filename);
-      res.setHeader("Content-disposition", "attachment; filename=" + originalName);
-      res.setHeader("Content-type", mimetype);
-      let filestream = fs.createReadStream(thumbnailFile);
-      filestream.on("end", function() {
-        L.has("silly") && L.log("silly", " - the thumbnail has been full-loaded");
-      });
-      filestream.pipe(res);
+      const originalName = box.fileInfo.name;
+      const filename = stringUtil.slugify(originalName);
+      const mimetype = getMimeType(thumbnailFile);
+      return transferFileToResponse.bind({ L, T })(filename, thumbnailFile, mimetype, res);
     })
     .catch(function(err) {
       res.status(404).send("Error: " + JSON.stringify(err));
@@ -287,6 +264,52 @@ function createShowPictureMiddleware (context) {
     //
     return verbose ? promize : undefined;
   };
+}
+
+function getMimeType (fileNameOrPath) {
+  return mime.lookup(fileNameOrPath);
+}
+
+function createDir (dirPath) {
+  const { L, T } = this || {};
+  return Promise.promisify(mkdirp)(dirPath);
+}
+
+function removeDir (dirPath) {
+  const { L, T } = this || {};
+  return new Promise(function(resolve, reject) {
+    rimraf(dirPath, function(err) {
+      if (err) {
+        L && T && L.has("silly") && L.log("silly", " - the /upload cleanup has been error: %s", err);
+        reject(err);
+      } else {
+        L && T && L.has("silly") && L.log("silly", " - the /upload cleanup has been successful");
+        resolve();
+      }
+    });
+  })
+}
+
+function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
+  const { L, T } = this;
+  L.has("silly") && L.log("silly", T.add({ filename, mimetype }).toMessage({
+    text: " - The file [${filename}] (${mimetype}) is downloading"
+  }));
+  return new Promise(function(resolve, reject) {
+    res.setHeader("Content-disposition", "attachment; filename=" + filename);
+    res.setHeader("Content-type", mimetype);
+    const filestream = fs.createReadStream(fileLocationPath);
+    filestream.on("error", function(err) {
+      reject(err);
+    });
+    filestream.on("end", function() {
+      L.has("silly") && L.log("silly", T.toMessage({
+        text: " - the file has been full-loaded"
+      }));
+      resolve();
+    });
+    filestream.pipe(res);
+  })
 }
 
 Service.referenceHash = {

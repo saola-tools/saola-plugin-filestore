@@ -1,6 +1,6 @@
 {
   "name": "app-filestore",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Devebot application filestore layerware",
   "homepage": "https://github.com/apporo/app-filestore.git",
   "author": {
@@ -23,7 +23,7 @@
     "check": "npm exec -- eslint config src index.js",
     "check-silent": "npm exec -- eslint --quiet config src index.js",
     "pretest": "npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-test} npm run build",
-    "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/**/*-test.js",
+    "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/**/*-test.js ./test/bdd/*-test.js",
     "test": "npm run testOnly",
     "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"
@@ -36,14 +36,13 @@
     "app-errorlist": "^0.4.0",
     "app-tracelog": "^0.4.0",
     "app-webweaver": "^0.4.0",
-    "devebot": "^0.4.0",
     "devebot-co-mongojs": "^0.4.0"
   },
   "dependencies": {
     "app-errorlist": "^0.4.0",
     "app-tracelog": "^0.4.0",
     "app-webweaver": "^0.4.0",
-    "devebot": "^0.4.0",
+    "devebot": "^0.4.1",
     "devebot-co-mongojs": "^0.4.0",
     "easyimage": "^2.1.0",
     "formidable": "^1.0.17",
