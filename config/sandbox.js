@@ -6,7 +6,9 @@ module.exports = {
         FILE: "files"
       },
       errorCodes: {
-      }
+      },
+      thumbnailMaxWidth: 16 * 50,
+      thumbnailMaxHeight: 9 * 50,
     }
   },
   bridges: {

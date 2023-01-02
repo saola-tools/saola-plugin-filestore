@@ -29,6 +29,7 @@ function Service (params = {}) {
   const tmpRootDir = os.tmpdir() + "/devebot/filestore";
   const uploadDir = pluginCfg.uploadDir;
   const thumbnailDir = pluginCfg.thumbnailDir || uploadDir;
+  const thumbnailCfg = lodash.pick(pluginCfg, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
   const express = webweaverService.express;
 
   const filestoreRouter = express();
@@ -50,7 +51,7 @@ function Service (params = {}) {
     "/picture/:fileId/:width/:height",
     "/picture/:fileId/:width/:height/:filename"
   ]).get(createShowPictureMiddleware({
-    L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir
+    L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, ...thumbnailCfg
   }));
 
   this.getFilestoreLayer = function() {
@@ -97,10 +98,10 @@ function createUploadMiddleware (context) {
       ctx.fileType = "path";
       ctx.fileSource = ctx.fileInfo.path;
       if (lodash.isEmpty(ctx.fileId)) {
-        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
+        return Promise.reject(errorBuilder.newError("FileIdMustNotBeEmptyError"));
       }
       if (lodash.isEmpty(ctx.fileInfo)) {
-        return Promise.reject(errorBuilder.newError("EmptyFileDataError"));
+        return Promise.reject(errorBuilder.newError("FileDataMustNotBeEmptyError"));
       }
       return filestoreHandler.saveFile(ctx);
     })
@@ -137,7 +138,7 @@ function createDownloadFileMiddleware (context) {
         text: " - /download/:fileId is request: ${fileId}"
       }));
       if (lodash.isEmpty(req.params.fileId)) {
-        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
+        return Promise.reject(errorBuilder.newError("FileIdMustNotBeEmptyError"));
       }
       return filestoreHandler.getFileInfo(req.params.fileId);
     })
@@ -162,6 +163,7 @@ function createDownloadFileMiddleware (context) {
 function createShowPictureMiddleware (context) {
   context = context || {};
   const { L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
+  const { thumbnailMaxWidth, thumbnailMaxHeight } = context;
   //
   return function(req, res, next) {
     let box = {};
@@ -176,7 +178,7 @@ function createShowPictureMiddleware (context) {
       }));
 
       if (lodash.isEmpty(req.params.fileId)) {
-        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
+        return Promise.reject(errorBuilder.newError("FileIdMustNotBeEmptyError"));
       }
       //
       if (lodash.isEmpty(req.params.width)) {
@@ -194,9 +196,15 @@ function createShowPictureMiddleware (context) {
       if (!lodash.isInteger(box.width)) {
         return Promise.reject(errorBuilder.newError("WidthMustBeIntegerError"));
       }
+      if (thumbnailMaxWidth && box.width > thumbnailMaxWidth) {
+        return Promise.reject(errorBuilder.newError("WidthExceedsLimitError"));
+      }
       //
       if (!lodash.isInteger(box.height)) {
         return Promise.reject(errorBuilder.newError("HeightMustBeIntegerError"));
+      }
+      if (thumbnailMaxHeight && box.height > thumbnailMaxHeight) {
+        return Promise.reject(errorBuilder.newError("HeightExceedsLimitError"));
       }
 
       return filestoreHandler.getFileInfo(req.params.fileId);

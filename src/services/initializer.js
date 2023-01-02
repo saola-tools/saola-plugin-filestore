@@ -8,9 +8,9 @@ function Service (params = {}) {
   });
 
   const errorStringMappings = {
-    "FileIdIsEmptyError": "fileId_is_empty",
     "FileIdNotFoundError": "fileId_not_found",
-    "EmptyFileDataError": "invalid_upload_fields",
+    "FileIdMustNotBeEmptyError": "fileId_is_empty",
+    "FileDataMustNotBeEmptyError": "invalid_upload_fields",
     "HeightMustNotBeEmptyError": "height_is_empty",
     "WidthMustNotBeEmptyError": "width_is_empty",
   };
