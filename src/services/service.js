@@ -172,7 +172,7 @@ function createShowPictureMiddleware (context) {
         width: req.params.width,
         height: req.params.height,
       }).toMessage({
-        text: " - /picture/%s/%s/%s is request"
+        text: " - /picture/${fileId}/${width}/${height} is requested"
       }));
 
       if (lodash.isEmpty(req.params.fileId)) {
@@ -219,28 +219,7 @@ function createShowPictureMiddleware (context) {
         text: " - thumbnailFile: ${thumbnailFile}"
       }));
 
-      return Promise.promisify(function(done) {
-        fs.stat(box.thumbnailFile, function(err, stats) {
-          if (!err) return done(null, box.thumbnailFile);
-          // Note: ImageMagick Not Found
-          easyimage.rescrop({
-            src: box.originFile,
-            dst: box.thumbnailFile,
-            width: box.width,
-            height: box.height,
-            fill: true
-          }).then(
-            function(image) {
-              L && L.has("silly") && L.log("silly", " - Converted: " + image.width + " x " + image.height);
-              done(null, box.thumbnailFile);
-            },
-            function (err) {
-              L && L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
-              done(err);
-            }
-          );
-        });
-      })();
+      return resizeAndCropImage.bind({ L, T })(box);
     })
     .then(function(thumbnailFile) {
       const originalName = box.fileInfo.name;
@@ -270,12 +249,47 @@ function removeDir (dirPath) {
   return new Promise(function(resolve, reject) {
     rimraf(dirPath, function(err) {
       if (err) {
-        L && L.has("silly") && L.log("silly", " - the /upload cleanup has been error: %s", err);
+        L && L.has("silly") && L.log("silly", T && T.add({
+          name: err.name,
+          message: err.message
+        }).toMessage({
+          text: " - the /upload cleanup has been error: ${name} - ${message}"
+        }));
         reject(err);
       } else {
-        L && L.has("silly") && L.log("silly", " - the /upload cleanup has been successful");
+        L && L.has("silly") && L.log("silly", T && T.toMessage({
+          text: " - the /upload cleanup has been successful"
+        }));
         resolve();
       }
+    });
+  });
+}
+
+function resizeAndCropImage (box) {
+  const { L, T } = this || {};
+  return new Promise(function(resolve, reject) {
+    fs.stat(box.thumbnailFile, function(err, stats) {
+      if (!err) {
+        return resolve(box.thumbnailFile);
+      }
+      // Note: ImageMagick may be not found
+      easyimage.rescrop({
+        src: box.originFile,
+        dst: box.thumbnailFile,
+        width: box.width,
+        height: box.height,
+        fill: true
+      }).then(
+        function(image) {
+          L && L.has("silly") && L.log("silly", " - Converted: " + image.width + " x " + image.height);
+          resolve(null, box.thumbnailFile);
+        },
+        function (err) {
+          L && L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
+          reject(err);
+        }
+      );
     });
   });
 }
