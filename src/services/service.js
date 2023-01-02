@@ -19,7 +19,7 @@ const lodash = Devebot.require("lodash");
 const stringUtil = require("../supports/string-util");
 
 function Service (params = {}) {
-  const { filestoreHandler, tracelogService, webweaverService } = params;
+  const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
   const L = params.loggingFactory.getLogger();
   const T = params.loggingFactory.getTracer();
 
@@ -36,21 +36,21 @@ function Service (params = {}) {
   filestoreRouter.route([
     "/upload"
   ]).post(createUploadMiddleware({
-    L, T, filestoreHandler, contextPath, tmpRootDir
+    L, T, errorBuilder, filestoreHandler, contextPath, tmpRootDir
   }));
 
   filestoreRouter.route([
     "/download/:fileId",
     "/download/:fileId/:filename"
   ]).get(createDownloadFileMiddleware({
-    L, T, filestoreHandler, uploadDir
+    L, T, errorBuilder, filestoreHandler, uploadDir
   }));
 
   filestoreRouter.route([
     "/picture/:fileId/:width/:height",
     "/picture/:fileId/:width/:height/:filename"
   ]).get(createShowPictureMiddleware({
-    L, T, filestoreHandler, uploadDir, thumbnailDir
+    L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir
   }));
 
   this.getFilestoreLayer = function() {
@@ -70,10 +70,10 @@ function Service (params = {}) {
 
 function createUploadMiddleware (context) {
   context = context || {};
-  const { L, T, filestoreHandler, contextPath, tmpRootDir, verbose } = context;
+  const { L, T, errorBuilder, filestoreHandler, contextPath, tmpRootDir, verbose } = context;
   //
   return function(req, res, next) {
-    L.has("silly") && L.log("silly", " - the /upload is requested ...");
+    L && L.has("silly") && L.log("silly", " - the /upload is requested ...");
 
     let tmpId = uuid.v4();
     let ctx = {
@@ -82,58 +82,36 @@ function createUploadMiddleware (context) {
 
     let promize = Promise.resolve()
     .then(function() {
-      L.has("silly") && L.log("silly", T.add({ tmpDir: ctx.tmpDir }).toMessage({
+      L && L.has("silly") && L.log("silly", T && T.add({ tmpDir: ctx.tmpDir }).toMessage({
         text: " - the tmpDir: ${tmpDir}"
       }));
       return createDir(ctx.tmpDir);
     })
     .then(function() {
-      return Promise.promisify(function(done) {
-        let result = { fields: {}, files: {} };
-
-        let form = new formidable.IncomingForm();
-        form.uploadDir = ctx.tmpDir;
-        form.keepExtensions = true;
-        form
-          .on("file", function(field, value) {
-            L.has("silly") && L.log("silly", " - formidable trigger a file: %s", field);
-            result.files[field] = value;
-          })
-          .on("field", function(field, value) {
-            L.has("silly") && L.log("silly", " - formidable trigger a field: %s", field);
-            result.fields[field] = value;
-          })
-          .on("error", function(err) {
-            L.has("silly") && L.log("silly", " -> upload has error: %s", JSON.stringify(err));
-            done(err);
-          })
-          .on("end", function() {
-            L.has("silly") && L.log("silly", " -> upload has done");
-            done(null, result);
-          });
-
-        form.parse(req);
-      })();
+      return parseUploadFormData.bind({ L, T })(ctx, req);
     })
     .then(function(result) {
-      L.has("silly") && L.log("silly", " - the /upload result: %s", JSON.stringify(result, null, 2));
+      L && L.has("silly") && L.log("silly", " - the /upload result: %s", JSON.stringify(result, null, 2));
       ctx.fileId = result.fields.fileId || uuid.v4();
       ctx.fileInfo = lodash.pick(result.files.data || {}, ["size", "path", "name", "type", "mtime"]);
       ctx.fileType = "path";
       ctx.fileSource = ctx.fileInfo.path;
-      if (lodash.isEmpty(ctx.fileId) || lodash.isEmpty(ctx.fileInfo)) {
-        return Promise.reject("invalid_upload_fields");
+      if (lodash.isEmpty(ctx.fileId)) {
+        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
+      }
+      if (lodash.isEmpty(ctx.fileInfo)) {
+        return Promise.reject(errorBuilder.newError("EmptyFileDataError"));
       }
       return filestoreHandler.saveFile(ctx);
     })
     .then(function(returnInfo) {
-      L.has("silly") && L.log("silly", " - the file has been saved successfully: %s", JSON.stringify(returnInfo, null, 2));
+      L && L.has("silly") && L.log("silly", " - the file has been saved successfully: %s", JSON.stringify(returnInfo, null, 2));
       returnInfo["fileUrl"] = path.join(contextPath, "/download/" + ctx.fileId);
       res.json(returnInfo);
       return returnInfo;
     })
     .catch(function(err) {
-      L.has("silly") && L.log("silly", " - error: %s; context: %s", JSON.stringify(err), JSON.stringify(ctx, null, 2));
+      L && L.has("silly") && L.log("silly", " - error: %s; context: %s", JSON.stringify(err), JSON.stringify(ctx, null, 2));
       res.status(404).json({ error: JSON.stringify(err) });
     })
     .finally(function() {
@@ -148,22 +126,24 @@ function createUploadMiddleware (context) {
 
 function createDownloadFileMiddleware (context) {
   context = context || {};
-  const { L, T, filestoreHandler, uploadDir, verbose } = context;
+  const { L, T, errorBuilder, filestoreHandler, uploadDir, verbose } = context;
   //
   return function(req, res, next) {
     let promize = Promise.resolve()
     .then(function() {
-      L.has("silly") && L.log("silly", T.add({ fileId: req.params.fileId }).toMessage({
+      L && L.has("silly") && L.log("silly", T && T.add({
+        fileId: req.params.fileId
+      }).toMessage({
         text: " - /download/:fileId is request: ${fileId}"
       }));
       if (lodash.isEmpty(req.params.fileId)) {
-        return Promise.reject("fileId_is_empty");
+        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
       }
       return filestoreHandler.getFileInfo(req.params.fileId);
     })
     .then(function(fileInfo) {
       if (lodash.isEmpty(fileInfo)) {
-        return Promise.reject("fileId_not_found");
+        return Promise.reject(errorBuilder.newError("FileIdNotFoundError"));
       }
       const originalName = fileInfo.name || path.basename(fileInfo.path);
       const filename = stringUtil.slugify(originalName);
@@ -181,13 +161,13 @@ function createDownloadFileMiddleware (context) {
 
 function createShowPictureMiddleware (context) {
   context = context || {};
-  const { L, T, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
+  const { L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
   //
   return function(req, res, next) {
     let box = {};
     let promize = Promise.resolve()
     .then(function() {
-      L.has("silly") && L.log("silly", T.add({
+      L && L.has("silly") && L.log("silly", T && T.add({
         fileId: req.params.fileId,
         width: req.params.width,
         height: req.params.height,
@@ -196,18 +176,28 @@ function createShowPictureMiddleware (context) {
       }));
 
       if (lodash.isEmpty(req.params.fileId)) {
-        return Promise.reject("fileId_is_empty");
+        return Promise.reject(errorBuilder.newError("FileIdIsEmptyError"));
       }
+      //
       if (lodash.isEmpty(req.params.width)) {
-        return Promise.reject("width_is_empty");
+        return Promise.reject(errorBuilder.newError("WidthMustNotBeEmptyError"));
       }
+      //
       if (lodash.isEmpty(req.params.height)) {
-        return Promise.reject("height_is_empty");
+        return Promise.reject(errorBuilder.newError("HeightMustNotBeEmptyError"));
       }
 
       box.fileId = req.params.fileId;
-      box.width = req.params.width;
-      box.height = req.params.height;
+      box.width = parseInt(req.params.width);
+      box.height = parseInt(req.params.height);
+
+      if (!lodash.isInteger(box.width)) {
+        return Promise.reject(errorBuilder.newError("WidthMustBeIntegerError"));
+      }
+      //
+      if (!lodash.isInteger(box.height)) {
+        return Promise.reject(errorBuilder.newError("HeightMustBeIntegerError"));
+      }
 
       return filestoreHandler.getFileInfo(req.params.fileId);
     })
@@ -225,7 +215,7 @@ function createShowPictureMiddleware (context) {
       box.fileInfo = fileInfo;
       box.thumbnailFile = path.join(thumbnailDir, box.fileId, util.format("thumbnail-%sx%s", box.width, box.height));
 
-      L.has("silly") && L.log("silly", T.add(box).toMessage({
+      L && L.has("silly") && L.log("silly", T && T.add(box).toMessage({
         text: " - thumbnailFile: ${thumbnailFile}"
       }));
 
@@ -241,11 +231,11 @@ function createShowPictureMiddleware (context) {
             fill: true
           }).then(
             function(image) {
-              L.has("silly") && L.log("silly", " - Converted: " + image.width + " x " + image.height);
+              L && L.has("silly") && L.log("silly", " - Converted: " + image.width + " x " + image.height);
               done(null, box.thumbnailFile);
             },
             function (err) {
-              L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
+              L && L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
               done(err);
             }
           );
@@ -280,19 +270,50 @@ function removeDir (dirPath) {
   return new Promise(function(resolve, reject) {
     rimraf(dirPath, function(err) {
       if (err) {
-        L && T && L.has("silly") && L.log("silly", " - the /upload cleanup has been error: %s", err);
+        L && L.has("silly") && L.log("silly", " - the /upload cleanup has been error: %s", err);
         reject(err);
       } else {
-        L && T && L.has("silly") && L.log("silly", " - the /upload cleanup has been successful");
+        L && L.has("silly") && L.log("silly", " - the /upload cleanup has been successful");
         resolve();
       }
     });
-  })
+  });
+}
+
+function parseUploadFormData (ctx, req) {
+  ctx = ctx || {};
+  const { L, T } = this || ctx;
+  return new Promise(function(resolve, reject) {
+    let result = { fields: {}, files: {} };
+
+    let form = new formidable.IncomingForm();
+    form.uploadDir = ctx.tmpDir;
+    form.keepExtensions = true;
+    form
+      .on("file", function(field, value) {
+        L && L.has("silly") && L.log("silly", " - formidable trigger a file: %s", field);
+        result.files[field] = value;
+      })
+      .on("field", function(field, value) {
+        L && L.has("silly") && L.log("silly", " - formidable trigger a field: %s", field);
+        result.fields[field] = value;
+      })
+      .on("error", function(err) {
+        L && L.has("silly") && L.log("silly", " -> upload has error: %s", JSON.stringify(err));
+        reject(err);
+      })
+      .on("end", function() {
+        L && L.has("silly") && L.log("silly", " -> upload has done");
+        resolve(result);
+      });
+
+    form.parse(req);
+  });
 }
 
 function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
-  const { L, T } = this;
-  L.has("silly") && L.log("silly", T.add({ filename, mimetype }).toMessage({
+  const { L, T } = this || {};
+  L && L.has("silly") && L.log("silly", T && T.add({ filename, mimetype }).toMessage({
     text: " - The file [${filename}] (${mimetype}) is downloading"
   }));
   return new Promise(function(resolve, reject) {
@@ -303,16 +324,17 @@ function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
       reject(err);
     });
     filestream.on("end", function() {
-      L.has("silly") && L.log("silly", T.toMessage({
+      L && L.has("silly") && L.log("silly", T && T.toMessage({
         text: " - the file has been full-loaded"
       }));
       resolve();
     });
     filestream.pipe(res);
-  })
+  });
 }
 
 Service.referenceHash = {
+  errorBuilder: "initializer",
   filestoreHandler: "handler",
   tracelogService: "app-tracelog/tracelogService",
   webweaverService: "app-webweaver/webweaverService"

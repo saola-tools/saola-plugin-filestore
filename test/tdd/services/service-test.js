@@ -6,7 +6,7 @@ const devebot = require("devebot");
 const Promise = devebot.require("bluebird");
 const lodash = devebot.require("lodash");
 const chores = devebot.require("chores");
-const { assert, mockit, sinon } = require("liberica");
+const { assert, mockit } = require("liberica");
 const path = require("path");
 const util = require("util");
 
@@ -22,6 +22,27 @@ describe("filestoreService", function() {
     blockRef: "app-filestore/service",
     tmpRootDir: os.tmpdir() + "/devebot/filestore"
   };
+
+  describe("createDir()", function() {
+    let Handler, createDir;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("service", serviceLocation);
+      createDir = mockit.get(Handler, "createDir");
+    });
+
+    it("mkdirp raises an error [EPERM: operation not permitted]", function() {
+      return createDir("/bin/abcd")
+        .then(function(result) {
+          assert.fail("This function call must raise an Error");
+        })
+        .catch(function(err) {
+          assert.equal(err.name, "Error");
+          assert.equal(err.message, "EPERM: operation not permitted, mkdir '/bin/abcd'");
+          // OperationalError: EPERM: operation not permitted, mkdir '/bin/abcd'
+        })
+    });
+  });
 
   describe("getMimeType()", function() {
     let Handler, getMimeType;
