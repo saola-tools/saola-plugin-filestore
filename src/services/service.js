@@ -74,6 +74,7 @@ function Service (params = {}) {
 function createUploadMiddleware (context) {
   context = context || {};
   const { L, T, errorBuilder, filestoreHandler, contextPath, tmpRootDir, verbose } = context;
+  const that = { L, T };
   //
   return function(req, res, next) {
     L && L.has("silly") && L.log("silly", " - the /upload is requested ...");
@@ -91,7 +92,7 @@ function createUploadMiddleware (context) {
       return createDir(ctx.tmpDir);
     })
     .then(function() {
-      return parseUploadFormData.bind({ L, T })(ctx, req);
+      return parseUploadFormData.bind(that)(req, ctx);
     })
     .then(function(result) {
       L && L.has("silly") && L.log("silly", " - the /upload result: %s", JSON.stringify(result, null, 2));
@@ -119,7 +120,7 @@ function createUploadMiddleware (context) {
     })
     .finally(function() {
       if (ctx.tmpDir.match(tmpRootDir)) {
-        removeDir.bind({L, T})(ctx.tmpDir);
+        removeDir.bind(that)(ctx.tmpDir);
       }
     });
     //
@@ -137,7 +138,7 @@ function createDownloadFileMiddleware (context) {
       L && L.has("silly") && L.log("silly", T && T.add({
         fileId: req.params.fileId
       }).toMessage({
-        text: " - /download/:fileId is request: ${fileId}"
+        text: " - /download/:fileId is requested: ${fileId}"
       }));
       if (lodash.isEmpty(req.params.fileId)) {
         return Promise.reject(errorBuilder.newError("FileIdMustNotBeEmptyError"));
@@ -166,6 +167,8 @@ function createShowPictureMiddleware (context) {
   context = context || {};
   const { L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
   const { thumbnailMaxWidth, thumbnailMaxHeight, thumbnailFrameMatcher } = context;
+  //
+  const that = { L, T };
   //
   return function(req, res, next) {
     let box = {};
@@ -216,30 +219,36 @@ function createShowPictureMiddleware (context) {
       return filestoreHandler.getFileInfo(req.params.fileId);
     })
     .then(function(fileInfo) {
-      if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
-        fileInfo = {
-          name: "no-image.png",
-          path: path.join(__dirname, "../../data/no-image.png")
-        };
-        box.originFile = path.join(__dirname, "../../data/no-image.png");
-      } else {
-        box.originFile = path.join(uploadDir, box.fileId, fileInfo.name);
-      }
-
       box.fileInfo = fileInfo;
-      box.thumbnailFile = path.join(thumbnailDir, box.fileId, util.format("thumbnail-%sx%s", box.width, box.height));
-
+      //
+      if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
+        return getImageNotFoundThumbnail.bind(that)({
+          thumbnailDir,
+          width: box.width,
+          height: box.height
+        });
+      } else {
+        return createImageThumbnail.bind(that)({
+          uploadDir,
+          thumbnailDir,
+          fileId: box.fileId,
+          fileName: fileInfo.name,
+          width: box.width,
+          height: box.height
+        });
+      }
+    })
+    .then(function(thumbnailFile) {
+      box.thumbnailFile = thumbnailFile;
+      //
       L && L.has("silly") && L.log("silly", T && T.add(box).toMessage({
         text: " - thumbnailFile: ${thumbnailFile}"
       }));
-
-      return resizeAndCropImage.bind({ L, T })(box);
-    })
-    .then(function(thumbnailFile) {
+      //
       const originalName = box.fileInfo.name;
       const filename = stringUtil.slugify(originalName);
       const mimetype = getMimeType(thumbnailFile);
-      return transferFileToResponse.bind({ L, T })(filename, thumbnailFile, mimetype, res);
+      return transferFileToResponse.bind(that)(filename, thumbnailFile, mimetype, res);
     })
     .catch(function(err) {
       res.status(404).send("Error: " + JSON.stringify(err));
@@ -318,6 +327,23 @@ function removeDir (dirPath) {
   });
 }
 
+function getImageNotFoundThumbnail ({ staticDir, thumbnailDir, width, height } = {}) {
+  staticDir = staticDir || path.join(__dirname, "../../data/");
+  thumbnailDir = thumbnailDir || staticDir;
+  //
+  const originFile = path.join(staticDir, "no-image.png");
+  const thumbnailFile = path.join(thumbnailDir, util.format("no-image-thumbnail-%sx%s", width, height));
+  //
+  return resizeAndCropImage.bind(this)({ originFile, thumbnailFile, width, height });
+}
+
+function createImageThumbnail ({ uploadDir, thumbnailDir, fileId, fileName, width, height } = {}) {
+  const originFile = path.join(uploadDir, fileId, fileName);
+  const thumbnailFile = path.join(thumbnailDir, fileId, util.format("thumbnail-%sx%s", width, height));
+  //
+  return resizeAndCropImage.bind(this)({ originFile, thumbnailFile, width, height });
+}
+
 function resizeAndCropImage (box) {
   const { L, T } = this || {};
   return new Promise(function(resolve, reject) {
@@ -346,9 +372,9 @@ function resizeAndCropImage (box) {
   });
 }
 
-function parseUploadFormData (ctx, req) {
+function parseUploadFormData (req, ctx) {
   ctx = ctx || {};
-  const { L, T } = this || ctx;
+  const { L, T } = this || {};
   return new Promise(function(resolve, reject) {
     let result = { fields: {}, files: {} };
 
