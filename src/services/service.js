@@ -30,6 +30,8 @@ function Service (params = {}) {
   const uploadDir = pluginCfg.uploadDir;
   const thumbnailDir = pluginCfg.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(pluginCfg, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
+  const thumbnailFrameMatcher = ThumbnailFrameMatcher.newInstance(pluginCfg.thumbnailFrames);
+
   const express = webweaverService.express;
 
   const filestoreRouter = express();
@@ -51,7 +53,7 @@ function Service (params = {}) {
     "/picture/:fileId/:width/:height",
     "/picture/:fileId/:width/:height/:filename"
   ]).get(createShowPictureMiddleware({
-    L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, ...thumbnailCfg
+    L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, ...thumbnailCfg, thumbnailFrameMatcher
   }));
 
   this.getFilestoreLayer = function() {
@@ -163,7 +165,7 @@ function createDownloadFileMiddleware (context) {
 function createShowPictureMiddleware (context) {
   context = context || {};
   const { L, T, errorBuilder, filestoreHandler, uploadDir, thumbnailDir, verbose } = context;
-  const { thumbnailMaxWidth, thumbnailMaxHeight } = context;
+  const { thumbnailMaxWidth, thumbnailMaxHeight, thumbnailFrameMatcher } = context;
   //
   return function(req, res, next) {
     let box = {};
@@ -207,6 +209,10 @@ function createShowPictureMiddleware (context) {
         return Promise.reject(errorBuilder.newError("HeightExceedsLimitError"));
       }
 
+      if (thumbnailFrameMatcher && !thumbnailFrameMatcher.isMatch(box.width, box.height)) {
+        return Promise.reject(errorBuilder.newError("ThumbnailFrameIsMismatchedError"));
+      }
+
       return filestoreHandler.getFileInfo(req.params.fileId);
     })
     .then(function(fileInfo) {
@@ -241,6 +247,44 @@ function createShowPictureMiddleware (context) {
     //
     return verbose ? promize : undefined;
   };
+}
+
+class ThumbnailFrameMatcher {
+  constructor (frames) {
+    this._frames = [];
+    this._skipped = false;
+    //
+    if (lodash.isArray(frames) && frames.lengh > 0) {
+      this._frames = lodash.filter(frames, function(frame) {
+        return lodash.isArray(frame) && frame.length == 2 &&
+            lodash.isInteger(frame[0]) && frame[0] > 0 &&
+            lodash.isInteger(frame[1]) && frame[1] > 0
+      });
+    } else {
+      this._skipped = true;
+    }
+  }
+  //
+  isMatch (width, height) {
+    if (this._skipped) {
+      return true;
+    }
+    //
+    for (const frame of this._frames) {
+      if (frame[0] == width && frame[1] == height) {
+        return true;
+      }
+    }
+    //
+    return false;
+  }
+  //
+  static newInstance(frames) {
+    if (lodash.isArray(frames) && frames.lengh > 0) {
+      return new ThumbnailFrameMatcher(frames);
+    }
+    return null;
+  }
 }
 
 function getMimeType (fileNameOrPath) {

@@ -9,6 +9,7 @@ module.exports = {
       },
       thumbnailMaxWidth: 16 * 50,
       thumbnailMaxHeight: 9 * 50,
+      thumbnailFrames: [],
     }
   },
   bridges: {
