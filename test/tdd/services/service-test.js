@@ -113,77 +113,77 @@ describe("filestoreService", function() {
         {
           nameOrPath: "nothing",
           mimeType: "application/octet-stream",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "/bin/mkdir",
           mimeType: "application/octet-stream",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.apng",
           mimeType: "image/apng",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.avif",
           mimeType: "image/avif",
-          tags: ["latest"]
+          tags: ["3.0.0", "latest"]
         },
         {
           nameOrPath: "something.gif",
           mimeType: "image/gif",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.png",
           mimeType: "image/png",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: path.join(__dirname, "../../", "lab/images/logbeat.png"),
           mimeType: "image/png",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.jpg",
           mimeType: "image/jpeg",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.jpeg",
           mimeType: "image/jpeg",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.jfif",
           mimeType: "image/jpeg",
-          tags: ["latest"]
+          tags: ["mozilla"]
         },
         {
           nameOrPath: "something.pjpeg",
           mimeType: "image/jpeg",
-          tags: ["latest"]
+          tags: ["mozilla"]
         },
         {
           nameOrPath: "something.pjp",
           mimeType: "image/jpeg",
-          tags: ["latest"]
+          tags: ["mozilla"]
         },
         {
           nameOrPath: "something.svg",
           mimeType: "image/svg+xml",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
         {
           nameOrPath: "something.webp",
           mimeType: "image/webp",
-          tags: ["1.6.0", "latest"]
+          tags: ["1.6.0", "3.0.0", "latest"]
         },
       ];
       //
       const selectedCases = lodash.filter(testcases, function(testcase) {
-        return testcase.tags.includes("1.6.0");
+        return testcase.tags.includes("3.0.0");
       });
       //
       for (const testcase of selectedCases) {

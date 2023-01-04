@@ -298,7 +298,11 @@ class ThumbnailFrameMatcher {
 }
 
 function getMimeType (fileNameOrPath) {
-  return mime.lookup(fileNameOrPath);
+  const mimeType = mime.getType(fileNameOrPath);
+  if (mimeType == null) {
+    return "application/octet-stream";
+  }
+  return mimeType;
 }
 
 function getImageNotFoundThumbnail ({ staticDir, thumbnailDir, width, height } = {}) {
