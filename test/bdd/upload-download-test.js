@@ -10,27 +10,26 @@ const { uploadFile, downloadFile, sampleFileContents } = require("../lib/file-ht
 const app = require("../example");
 
 describe("app.server", function() {
-  before(function() {
-    chores.setEnvironments({
-      DEVEBOT_FORCING_SILENT: "devebot,webserver",
-      LOGOLITE_FULL_LOG_MODE: "false",
-      LOGOLITE_ALWAYS_ENABLED: "all",
-      LOGOLITE_ALWAYS_MUTED: "all"
-    });
-  });
-  //
-  after(function() {
-    chores.clearCache();
-  });
-  //
   describe("upload and download general files", function() {
     const fileId = "612d388f-0569-427f-88ad-257e52a3b1a5";
     const originalFilePath = path.join(__dirname, "../lab/images/logbeat.png");
-    const thumbnailFilePath = path.join(__dirname, "../lab/images/logbeat-512x200.png");
     const downloadedFilePath = path.join(__dirname, "../tmp/download-logbeat.png");
-    const outputThumbnailPath = path.join(__dirname, "../tmp/thumbnail-logbeat.png");
+    //
+    before(function() {
+      chores.setEnvironments({
+        DEVEBOT_FORCING_SILENT: "devebot,webserver",
+        LOGOLITE_FULL_LOG_MODE: "false",
+        LOGOLITE_ALWAYS_ENABLED: "all",
+        LOGOLITE_ALWAYS_MUTED: "all"
+      });
+    });
+    //
+    after(function() {
+      chores.clearCache();
+    });
+    //
     beforeEach(function() {
-      return Promise.resolve().then(app.server.start).delay(100);
+      return Promise.resolve().then(app.server.start);
     });
     //
     afterEach(function() {
@@ -54,7 +53,7 @@ describe("app.server", function() {
       });
     });
     //
-    it("Download a file from the filestore", function() {
+    it("An Error will be raised if the parameter fileId is not found", function() {
       const url = `http://localhost:7979/example/download/unknown`;
       return downloadFile(url, downloadedFilePath)
         .then(function() {
@@ -71,14 +70,32 @@ describe("app.server", function() {
     const fileId = "612d388f-0569-427f-88ad-257e52a3b1a5";
     const originalFilePath = path.join(__dirname, "../lab/images/logbeat.png");
     const thumbnailFilePath = path.join(__dirname, "../lab/images/logbeat-512x200.png");
-    const downloadedFilePath = path.join(__dirname, "../tmp/download-logbeat.png");
     const outputThumbnailPath = path.join(__dirname, "../tmp/thumbnail-logbeat.png");
+    //
+    before(function() {
+      chores.setEnvironments({
+        DEVEBOT_FORCING_SILENT: "devebot,webserver",
+        LOGOLITE_FULL_LOG_MODE: "false",
+        LOGOLITE_ALWAYS_ENABLED: "all",
+        LOGOLITE_ALWAYS_MUTED: "all"
+      });
+    });
+    //
+    after(function() {
+      chores.clearCache();
+    });
+    //
     beforeEach(function() {
-      return Promise.resolve().then(app.server.start).delay(100);
+      return Promise.resolve().then(app.server.start);
     });
     //
     afterEach(function() {
       return app.server.stop();
+    });
+    //
+    it("Upload a file to the filestore", function() {
+      const url = "http://localhost:7979/example/upload/";
+      return uploadFile(url, originalFilePath, fileId);
     });
     //
     it("Download a thumbnail from the filestore", function() {
@@ -92,5 +109,7 @@ describe("app.server", function() {
         return result;
       });
     });
+    //
+
   });
 });
