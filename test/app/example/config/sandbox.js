@@ -1,12 +1,14 @@
-var path = require('path');
+"use strict";
 
-var contextPath = '/example';
+const path = require("path");
+
+const contextPath = "/example";
 
 module.exports = {
   plugins: {
     appFilestore: {
       contextPath: contextPath,
-      uploadDir: path.join(__dirname, '../data'),
+      uploadDir: path.join(__dirname, "../data"),
       thumbnailFrames: [
         [512, 200],
         [512, 288],

@@ -43,7 +43,7 @@ describe("filestoreService", function() {
     });
   });
 
-  function inspectDir(dir) {
+  function inspectDir (dir) {
     return fs.stat(dir).then(function(stats) {
       const result = lodash.pick(stats, [
         "dev", "mode", "uid", "gid", "size", "atime", "mtime", "ctime", "nlink"
@@ -59,7 +59,7 @@ describe("filestoreService", function() {
       }
       //
       return result;
-    })
+    });
   }
 
   describe("removeDir()", function() {
@@ -192,7 +192,7 @@ describe("filestoreService", function() {
           nameOrPath: testcase.nameOrPath, mimeType: testcase.mimeType, detectedMime
         }));
       }
-    })
+    });
   });
 
   describe("createUploadMiddleware()", function() {
@@ -208,6 +208,6 @@ describe("filestoreService", function() {
     it("ok", function() {
       const middleware = createUploadMiddleware(context);
       middleware();
-    })
+    });
   });
 });

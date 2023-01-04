@@ -389,7 +389,9 @@ function parseUploadFormData (req, ctx) {
         result.files[field] = value;
       })
       .on("field", function(field, value) {
-        L && L.has("silly") && L.log("silly", " - formidable trigger a field: %s", field);
+        L && L.has("silly") && L.log("silly", T && T.add({ field }).toMessage({
+          text: " - formidable trigger a field: ${field}"
+        }));
         result.fields[field] = value;
       })
       .on("error", function(err) {

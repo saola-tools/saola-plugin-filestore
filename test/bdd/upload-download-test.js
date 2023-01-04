@@ -54,7 +54,7 @@ describe("app.server", function() {
     });
     //
     it("An Error will be raised if the parameter fileId is not found", function() {
-      const url = `http://localhost:7979/example/download/unknown`;
+      const url = "http://localhost:7979/example/download/unknown";
       return downloadFile(url, downloadedFilePath)
         .then(function() {
           assert.fail("This request must raise an error");
