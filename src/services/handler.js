@@ -3,7 +3,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const mkdirp = require("mkdirp");
 const mv = require("mv");
 const uuid = require("uuid");
 
@@ -11,6 +10,7 @@ const Devebot = require("devebot");
 const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 
+const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
 
 function Handler (params = {}) {
@@ -77,7 +77,7 @@ function Handler (params = {}) {
     })
     .then(function() {
       ctx.uploadDirPath = path.join(uploadDir, fileId);
-      return mkdirp(ctx.uploadDirPath);
+      return createDir(ctx.uploadDirPath);
     })
     .then(function() {
       switch (fileType) {

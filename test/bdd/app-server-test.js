@@ -3,7 +3,7 @@
 const Devebot = require("devebot");
 const chores = Devebot.require("chores");
 
-const app = require("../app/example");
+const app = require("../app/simplest");
 
 describe("app.server", function() {
   before(function() {

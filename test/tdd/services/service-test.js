@@ -1,6 +1,7 @@
 "use strict";
 
 const os = require("os");
+const fs = require("fs").promises;
 
 const devebot = require("devebot");
 const Promise = devebot.require("bluebird");
@@ -32,15 +33,70 @@ describe("filestoreService", function() {
     });
 
     it("mkdirp raises an error [EPERM: operation not permitted]", function() {
-      return createDir("/bin/abcd")
-        .then(function(result) {
-          assert.fail("This function call must raise an Error");
-        })
-        .catch(function(err) {
-          assert.equal(err.name, "Error");
-          assert.equal(err.message, "EPERM: operation not permitted, mkdir '/bin/abcd'");
-          // OperationalError: EPERM: operation not permitted, mkdir '/bin/abcd'
-        })
+      return createDir("/bin/abcd").then(function(result) {
+        assert.fail("This function call must raise an Error");
+      }, function(err) {
+        assert.equal(err.name, "Error");
+        assert.equal(err.message, "EPERM: operation not permitted, mkdir '/bin/abcd'");
+        // OperationalError: EPERM: operation not permitted, mkdir '/bin/abcd'
+      });
+    });
+  });
+
+  function inspectDir(dir) {
+    return fs.stat(dir).then(function(stats) {
+      const result = lodash.pick(stats, [
+        "dev", "mode", "uid", "gid", "size", "atime", "mtime", "ctime", "nlink"
+      ]);
+      //
+      if (stats.isDirectory()) {
+        result.isDirectory = true;
+        result.isFile = false;
+      }
+      if (stats.isFile()) {
+        result.isDirectory = false;
+        result.isFile = true;
+      }
+      //
+      return result;
+    })
+  }
+
+  describe("removeDir()", function() {
+    const testDirPath = "/tmp/app-filestore-test";
+    let Handler, createDir, removeDir;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("service", serviceLocation);
+      createDir = mockit.get(Handler, "createDir");
+      removeDir = mockit.get(Handler, "removeDir");
+    });
+
+    it("A directory is removed successfully", function() {
+      let p = createDir(testDirPath).then(function(result) {
+        false && console.log("createDir: %s", result);
+        return inspectDir(testDirPath);
+      }, function(err) {
+        assert.fail("This function call must raise an Error");
+      });
+      //
+      p = p.then(function(info) {
+        assert.isTrue(info.isDirectory);
+      }, function(err) {
+        assert.fail("This function call must raise an Error");
+      });
+      //
+      p = p.then(function() {
+        return removeDir(testDirPath);
+      });
+      //
+      p = p.then(function(removedDirPath) {
+        assert.equal(removedDirPath, testDirPath);
+      }, function(err) {
+        assert.fail("This function call must raise an Error");
+      });
+      //
+      return p;
     });
   });
 

@@ -8,8 +8,6 @@ const util = require("util");
 const easyimage = require("easyimage");
 const formidable = require("formidable");
 const mime = require("mime");
-const mkdirp = require("mkdirp");
-const rimraf = require("rimraf");
 const uuid = require("uuid");
 
 const Devebot = require("devebot");
@@ -17,6 +15,7 @@ const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
+const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
 
 function Service (params = {}) {
@@ -27,7 +26,7 @@ function Service (params = {}) {
   const pluginCfg = params.sandboxConfig || {};
   const contextPath = pluginCfg.contextPath || "/filestore";
 
-  const tmpRootDir = os.tmpdir() + "/devebot/filestore";
+  const tmpRootDir = os.tmpdir() + pluginCfg.tmpBasePath || "/devebot/filestore";
   const uploadDir = pluginCfg.uploadDir;
   const thumbnailDir = pluginCfg.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(pluginCfg, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
@@ -300,32 +299,6 @@ class ThumbnailFrameMatcher {
 
 function getMimeType (fileNameOrPath) {
   return mime.lookup(fileNameOrPath);
-}
-
-function createDir (dirPath) {
-  return mkdirp(dirPath);
-}
-
-function removeDir (dirPath) {
-  const { L, T } = this || {};
-  return new Promise(function(resolve, reject) {
-    rimraf(dirPath, function(err) {
-      if (err) {
-        L && L.has("silly") && L.log("silly", T && T.add({
-          name: err.name,
-          message: err.message
-        }).toMessage({
-          text: " - the /upload cleanup has been error: ${name} - ${message}"
-        }));
-        reject(err);
-      } else {
-        L && L.has("silly") && L.log("silly", T && T.toMessage({
-          text: " - the /upload cleanup has been successful"
-        }));
-        resolve();
-      }
-    });
-  });
 }
 
 function getImageNotFoundThumbnail ({ staticDir, thumbnailDir, width, height } = {}) {
