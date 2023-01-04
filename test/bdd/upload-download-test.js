@@ -23,7 +23,7 @@ describe("app.server", function() {
     chores.clearCache();
   });
   //
-  describe("upload", function() {
+  describe("upload and download general files", function() {
     const fileId = "612d388f-0569-427f-88ad-257e52a3b1a5";
     const originalFilePath = path.join(__dirname, "../lab/images/logbeat.png");
     const thumbnailFilePath = path.join(__dirname, "../lab/images/logbeat-512x200.png");
@@ -64,6 +64,21 @@ describe("app.server", function() {
           false && console.log(err);
           assert.equal(err.response.status, 404);
         });
+    });
+  });
+  //
+  describe("upload images - download thumbnails", function() {
+    const fileId = "612d388f-0569-427f-88ad-257e52a3b1a5";
+    const originalFilePath = path.join(__dirname, "../lab/images/logbeat.png");
+    const thumbnailFilePath = path.join(__dirname, "../lab/images/logbeat-512x200.png");
+    const downloadedFilePath = path.join(__dirname, "../tmp/download-logbeat.png");
+    const outputThumbnailPath = path.join(__dirname, "../tmp/thumbnail-logbeat.png");
+    beforeEach(function() {
+      return Promise.resolve().then(app.server.start).delay(100);
+    });
+    //
+    afterEach(function() {
+      return app.server.stop();
     });
     //
     it("Download a thumbnail from the filestore", function() {
