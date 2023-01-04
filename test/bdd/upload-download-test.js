@@ -93,7 +93,7 @@ describe("app.server", function() {
       return app.server.stop();
     });
     //
-    it("Upload a file to the filestore", function() {
+    it("Upload an image to the filestore", function() {
       const url = "http://localhost:7979/example/upload/";
       return uploadFile(url, originalFilePath, fileId);
     });
@@ -110,6 +110,52 @@ describe("app.server", function() {
       });
     });
     //
-
+    it("An Error will be raised when the parameter width is not an integer", function() {
+      const url = `http://localhost:7979/example/picture/${fileId}/width/200`;
+      return downloadFile(url, outputThumbnailPath)
+        .then(function() {
+          assert.fail("This request must raise an error");
+        })
+        .catch(function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        });
+    });
+    //
+    it("An Error will be raised when the parameter width exceeds the max length (16x50)", function() {
+      const url = `http://localhost:7979/example/picture/${fileId}/810/200`;
+      return downloadFile(url, outputThumbnailPath)
+        .then(function() {
+          assert.fail("This request must raise an error");
+        })
+        .catch(function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        });
+    });
+    //
+    it("An Error will be raised when the parameter height is not an integer", function() {
+      const url = `http://localhost:7979/example/picture/${fileId}/512/height`;
+      return downloadFile(url, outputThumbnailPath)
+        .then(function() {
+          assert.fail("This request must raise an error");
+        })
+        .catch(function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        });
+    });
+    //
+    it("An Error will be raised when the parameter height exceeds the max length (9x50)", function() {
+      const url = `http://localhost:7979/example/picture/${fileId}/512/600`;
+      return downloadFile(url, outputThumbnailPath)
+        .then(function() {
+          assert.fail("This request must raise an error");
+        })
+        .catch(function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        });
+    });
   });
 });
