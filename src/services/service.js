@@ -15,6 +15,7 @@ const uuid = require("uuid");
 const Devebot = require("devebot");
 const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
+const chores = Devebot.require("chores");
 
 const stringUtil = require("../supports/string-util");
 
@@ -116,7 +117,7 @@ function createUploadMiddleware (context) {
     })
     .catch(function(err) {
       L && L.has("silly") && L.log("silly", " - error: %s; context: %s", JSON.stringify(err), JSON.stringify(ctx, null, 2));
-      res.status(404).json({ error: JSON.stringify(err) });
+      renderErrorToResponse({ action: "upload" }, err, res);
     })
     .finally(function() {
       if (ctx.tmpDir.match(tmpRootDir)) {
@@ -131,6 +132,7 @@ function createUploadMiddleware (context) {
 function createDownloadFileMiddleware (context) {
   context = context || {};
   const { L, T, errorBuilder, filestoreHandler, uploadDir, verbose } = context;
+  const that = { L, T };
   //
   return function(req, res, next) {
     let promize = Promise.resolve()
@@ -153,10 +155,10 @@ function createDownloadFileMiddleware (context) {
       const filename = stringUtil.slugify(originalName);
       const filepath = path.join(uploadDir, fileInfo.fileId, fileInfo.name);
       const mimetype = getMimeType(filepath);
-      return transferFileToResponse.bind({L, T})(filename, filepath, mimetype, res);
+      return transferFileToResponse.bind(that)(filename, filepath, mimetype, res);
     })
     .catch(function(err) {
-      res.status(404).send("Error: " + JSON.stringify(err));
+      renderErrorToResponse({ action: "download" }, err, res);
     });
     //
     return verbose ? promize : undefined;
@@ -251,7 +253,7 @@ function createShowPictureMiddleware (context) {
       return transferFileToResponse.bind(that)(filename, thumbnailFile, mimetype, res);
     })
     .catch(function(err) {
-      res.status(404).send("Error: " + JSON.stringify(err));
+      renderErrorToResponse({ action: "thumbnail" }, err, res);
     });
     //
     return verbose ? promize : undefined;
@@ -423,6 +425,59 @@ function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
     });
     filestream.pipe(res);
   });
+}
+
+function renderErrorToResponse (context, error, res) {
+  context = context || {};
+  if (context.prettyError) {
+    renderPacketToResponse(transformErrorToPacket(error), res);
+  } else {
+    if (context.action == "upload") {
+      res.status(404).json({ error: JSON.stringify(err) });
+    } else {
+      res.status(404).send("Error: " + JSON.stringify(err));
+    }    
+  }
+}
+
+function transformErrorToPacket (error) {
+  // statusCode, headers, body
+  let packet = {
+    statusCode: error.statusCode || 500,
+    headers: {},
+    body: {
+      name: error.name,
+      message: error.message
+    }
+  };
+  // payload
+  if (lodash.isObject(error.payload)) {
+    packet.body.payload = error.payload;
+  }
+  // Error.stack
+  if (chores.isDevelopmentMode()) {
+    packet.body.stack = lodash.split(error.stack, "\n");
+  }
+  //
+  return packet;
+}
+
+function renderPacketToResponse (packet = {}, res) {
+  if (lodash.isObject(packet.headers)) {
+    lodash.forOwn(packet.headers, function (value, key) {
+      res.set(key, value);
+    });
+  }
+  res.status(packet.statusCode || 200);
+  if (lodash.isNil(packet.body)) {
+    res.end();
+  } else {
+    if (lodash.isString(packet.body)) {
+      res.send(packet.body);
+    } else {
+      res.json(packet.body);
+    }
+  }
 }
 
 Service.referenceHash = {

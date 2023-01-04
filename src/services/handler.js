@@ -33,7 +33,7 @@ function Handler (params = {}) {
 
   this.getFileUrls = function(fileIds = []) {
     return Promise.map(fileIds, function(fileId) {
-      const r = mongoManipulator.findOneDocument(pluginCfg.collections.FILE, {fileId});
+      const r = mongoManipulator.findOneDocument(collectionName, {fileId});
       return r.then(function(fileData) {
         if (lodash.isEmpty(fileData)) {
           return { fileId };
@@ -72,7 +72,7 @@ function Handler (params = {}) {
       fileInfo.status = "intermediate";
 
       return mongoManipulator.updateDocument(
-        pluginCfg.collections.FILE,
+        collectionName,
         { fileId: fileId }, fileInfo, { multi: true, upsert: true });
     })
     .then(function() {
@@ -102,11 +102,11 @@ function Handler (params = {}) {
       fileInfo.fileUrl = path.join(contextPath, "/download/" + fileId);
       fileInfo.status = "ok";
       return mongoManipulator.updateDocument(
-        pluginCfg.collections.FILE,
+        collectionName,
         { fileId: fileId }, fileInfo, { multi: true, upsert: false });
     })
     .then(function() {
-      const fileCollection = mongoManipulator.mongojs.collection(pluginCfg.collections.FILE);
+      const fileCollection = mongoManipulator.mongojs.collection(collectionName);
       const findOne = Promise.promisify(fileCollection.findOne, { context: fileCollection });
       return findOne({ fileId: fileId });
     })
