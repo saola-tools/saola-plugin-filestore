@@ -1,6 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var app = require('../example/index');
+var app = require('../app/example');
 
 app.getSandboxService = function(serviceName) {
   return this.server.invoke(function(injector) {

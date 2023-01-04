@@ -7,7 +7,7 @@ const path = require("path");
 const { assert, mockit, sinon } = require("liberica");
 
 const { uploadFile, downloadFile, sampleFileContents } = require("../lib/file-http-handler");
-const app = require("../example");
+const app = require("../app/example");
 
 describe("app.server", function() {
   describe("upload and download general files", function() {
