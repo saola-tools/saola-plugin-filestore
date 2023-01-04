@@ -54,6 +54,18 @@ describe("app.server", function() {
       });
     });
     //
+    it("Download a file from the filestore", function() {
+      const url = `http://localhost:7979/example/download/unknown`;
+      return downloadFile(url, downloadedFilePath)
+        .then(function() {
+          assert.fail("This request must raise an error");
+        })
+        .catch(function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        });
+    });
+    //
     it("Download a thumbnail from the filestore", function() {
       const url = `http://localhost:7979/example/picture/${fileId}/512/200`;
       return downloadFile(url, outputThumbnailPath);

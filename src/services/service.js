@@ -269,7 +269,7 @@ class ThumbnailFrameMatcher {
       this._frames = lodash.filter(frames, function(frame) {
         return lodash.isArray(frame) && frame.length == 2 &&
             lodash.isInteger(frame[0]) && frame[0] > 0 &&
-            lodash.isInteger(frame[1]) && frame[1] > 0
+            lodash.isInteger(frame[1]) && frame[1] > 0;
       });
     } else {
       this._skipped = true;
@@ -290,7 +290,7 @@ class ThumbnailFrameMatcher {
     return false;
   }
   //
-  static newInstance(frames) {
+  static newInstance (frames) {
     if (lodash.isArray(frames) && frames.lengh > 0) {
       return new ThumbnailFrameMatcher(frames);
     }
@@ -303,7 +303,6 @@ function getMimeType (fileNameOrPath) {
 }
 
 function createDir (dirPath) {
-  const { L, T } = this || {};
   return Promise.promisify(mkdirp)(dirPath);
 }
 
@@ -362,7 +361,9 @@ function resizeAndCropImage (box) {
         fill: true
       }).then(
         function(image) {
-          L && L.has("silly") && L.log("silly", " - Converted: " + image.width + " x " + image.height);
+          L && L.has("silly") && L.log("silly", T && T.toMessage({
+            text: " - Converted: " + image.width + " x " + image.height
+          }));
           resolve(null, box.thumbnailFile);
         },
         function (err) {
@@ -385,7 +386,9 @@ function parseUploadFormData (req, ctx) {
     form.keepExtensions = true;
     form
       .on("file", function(field, value) {
-        L && L.has("silly") && L.log("silly", " - formidable trigger a file: %s", field);
+        L && L.has("silly") && L.log("silly", T && T.add({ field }).toMessage({
+          text: " - formidable trigger a file: ${field}"
+        }));
         result.files[field] = value;
       })
       .on("field", function(field, value) {
@@ -433,10 +436,10 @@ function renderErrorToResponse (context, error, res) {
     renderPacketToResponse(transformErrorToPacket(error), res);
   } else {
     if (context.action == "upload") {
-      res.status(404).json({ error: JSON.stringify(err) });
+      res.status(404).json({ error: JSON.stringify(error) });
     } else {
-      res.status(404).send("Error: " + JSON.stringify(err));
-    }    
+      res.status(404).send("Error: " + JSON.stringify(error));
+    }
   }
 }
 
