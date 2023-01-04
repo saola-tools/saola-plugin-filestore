@@ -77,7 +77,7 @@ function Handler (params = {}) {
     })
     .then(function() {
       ctx.uploadDirPath = path.join(uploadDir, fileId);
-      return Promise.promisify(mkdirp)(ctx.uploadDirPath);
+      return mkdirp(ctx.uploadDirPath);
     })
     .then(function() {
       switch (fileType) {

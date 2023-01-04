@@ -303,7 +303,7 @@ function getMimeType (fileNameOrPath) {
 }
 
 function createDir (dirPath) {
-  return Promise.promisify(mkdirp)(dirPath);
+  return mkdirp(dirPath);
 }
 
 function removeDir (dirPath) {
