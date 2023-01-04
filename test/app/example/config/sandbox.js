@@ -6,7 +6,11 @@ module.exports = {
   plugins: {
     appFilestore: {
       contextPath: contextPath,
-      uploadDir: path.join(__dirname, '../data')
+      uploadDir: path.join(__dirname, '../data'),
+      thumbnailFrames: [
+        [512, 200],
+        [512, 288],
+      ],
     },
     appTracelog: {
       tracingPaths: [ contextPath ],

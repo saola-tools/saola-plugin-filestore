@@ -53,14 +53,6 @@ curl -i -X POST \
 "http://localhost:7979/example/upload"
 ```
 
-```shell
-curl -i -X POST \
--H "Content-Type: multipart/form-data" \
--F "data=@./test/lab/images/logbeat.png" \
--F "fileId=612d388f-0569-427f-88ad-257e52a3b1a5" \
-"http://localhost:7979/example/upload"
-```
-
 ### How to download files
 
 Assert the output dir has been created:

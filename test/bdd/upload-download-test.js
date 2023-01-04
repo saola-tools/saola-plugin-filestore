@@ -115,8 +115,7 @@ describe("app.server", function() {
       return downloadFile(url, outputThumbnailPath)
         .then(function() {
           assert.fail("This request must raise an error");
-        })
-        .catch(function(err) {
+        }, function(err) {
           false && console.log(err);
           assert.equal(err.response.status, 404);
         });
@@ -127,8 +126,7 @@ describe("app.server", function() {
       return downloadFile(url, outputThumbnailPath)
         .then(function() {
           assert.fail("This request must raise an error");
-        })
-        .catch(function(err) {
+        }, function(err) {
           false && console.log(err);
           assert.equal(err.response.status, 404);
         });
@@ -139,8 +137,7 @@ describe("app.server", function() {
       return downloadFile(url, outputThumbnailPath)
         .then(function() {
           assert.fail("This request must raise an error");
-        })
-        .catch(function(err) {
+        }, function(err) {
           false && console.log(err);
           assert.equal(err.response.status, 404);
         });
@@ -148,14 +145,28 @@ describe("app.server", function() {
     //
     it("An Error will be raised when the parameter height exceeds the max length (9x50)", function() {
       const url = `http://localhost:7979/example/picture/${fileId}/512/600`;
-      return downloadFile(url, outputThumbnailPath)
-        .then(function() {
+      return downloadFile(url, outputThumbnailPath).then(
+        function() {
           assert.fail("This request must raise an error");
-        })
-        .catch(function(err) {
+        },
+        function(err) {
           false && console.log(err);
           assert.equal(err.response.status, 404);
-        });
+        }
+      );
+    });
+    //
+    it("An Error will be raised when the width and height are out of accepted frames", function() {
+      const url = `http://localhost:7979/example/picture/${fileId}/512/300`;
+      return downloadFile(url, outputThumbnailPath).then(
+        function() {
+          assert.fail("This request must raise an error");
+        },
+        function(err) {
+          false && console.log(err);
+          assert.equal(err.response.status, 404);
+        }
+      );
     });
   });
 });

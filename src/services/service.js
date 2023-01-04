@@ -265,7 +265,7 @@ class ThumbnailFrameMatcher {
     this._frames = [];
     this._skipped = false;
     //
-    if (lodash.isArray(frames) && frames.lengh > 0) {
+    if (lodash.isArray(frames) && lodash.size(frames) > 0) {
       this._frames = lodash.filter(frames, function(frame) {
         return lodash.isArray(frame) && frame.length == 2 &&
             lodash.isInteger(frame[0]) && frame[0] > 0 &&
@@ -291,7 +291,7 @@ class ThumbnailFrameMatcher {
   }
   //
   static newInstance (frames) {
-    if (lodash.isArray(frames) && frames.lengh > 0) {
+    if (lodash.isArray(frames) && lodash.size(frames) > 0) {
       return new ThumbnailFrameMatcher(frames);
     }
     return null;
