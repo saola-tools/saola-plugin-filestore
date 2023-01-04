@@ -200,17 +200,37 @@ function createShowPictureMiddleware (context) {
       box.height = parseInt(req.params.height);
 
       if (!lodash.isInteger(box.width)) {
-        return Promise.reject(errorBuilder.newError("WidthMustBeIntegerError"));
+        return Promise.reject(errorBuilder.newError("WidthMustBeIntegerError", {
+          payload: {
+            width: box.width,
+            typeOfWidth: (typeof box.width),
+          }
+        }));
       }
       if (thumbnailMaxWidth && box.width > thumbnailMaxWidth) {
-        return Promise.reject(errorBuilder.newError("WidthExceedsLimitError"));
+        return Promise.reject(errorBuilder.newError("WidthExceedsLimitError", {
+          payload: {
+            width: box.width,
+            maxWidth: thumbnailMaxWidth,
+          }
+        }));
       }
       //
       if (!lodash.isInteger(box.height)) {
-        return Promise.reject(errorBuilder.newError("HeightMustBeIntegerError"));
+        return Promise.reject(errorBuilder.newError("HeightMustBeIntegerError", {
+          payload: {
+            height: box.height,
+            typeOfHeight: (typeof box.height),
+          }
+        }));
       }
       if (thumbnailMaxHeight && box.height > thumbnailMaxHeight) {
-        return Promise.reject(errorBuilder.newError("HeightExceedsLimitError"));
+        return Promise.reject(errorBuilder.newError("HeightExceedsLimitError", {
+          payload: {
+            height: box.height,
+            maxHeight: thumbnailMaxHeight,
+          }
+        }));
       }
 
       if (thumbnailFrameMatcher && !thumbnailFrameMatcher.isMatch(box.width, box.height)) {
