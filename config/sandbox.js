@@ -5,6 +5,9 @@ module.exports = {
       collections: {
         FILE: "files"
       },
+      thumbnailMaxWidth: 16 * 50,
+      thumbnailMaxHeight: 9 * 50,
+      thumbnailFrames: [],
       errorCodes: {
         "FileIdNotFoundError": {
           message: "FileId not found",
@@ -57,9 +60,14 @@ module.exports = {
           statusCode: 404,
         },
       },
-      thumbnailMaxWidth: 16 * 50,
-      thumbnailMaxHeight: 9 * 50,
-      thumbnailFrames: [],
+      legacyErrorStringMappings: {
+        "FileIdNotFoundError": "fileId_not_found",
+        "FileIdMustNotBeEmptyError": "fileId_is_empty",
+        "FileDataMustNotBeEmptyError": "invalid_upload_fields",
+        "HeightMustNotBeEmptyError": "height_is_empty",
+        "WidthMustNotBeEmptyError": "width_is_empty",
+      },
+      legacyErrorStringEnabled: true,
     }
   },
   bridges: {

@@ -15,22 +15,48 @@ const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
+const { PortletMixiner } = require("app-webserver").require("portlet");
+
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
 
 function Service (params = {}) {
+  const { packageName, loggingFactory, configPortletifier } = params;
   const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
-  const L = params.loggingFactory.getLogger();
-  const T = params.loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
-  const pluginCfg = params.sandboxConfig || {};
-  const contextPath = pluginCfg.contextPath || "/filestore";
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
 
-  const tmpRootDir = os.tmpdir() + pluginCfg.tmpBasePath || "/devebot/filestore";
-  const uploadDir = pluginCfg.uploadDir;
-  const thumbnailDir = pluginCfg.thumbnailDir || uploadDir;
-  const thumbnailCfg = lodash.pick(pluginCfg, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
-  const thumbnailFrameMatcher = ThumbnailFrameMatcher.newInstance(pluginCfg.thumbnailFrames);
+  const pluginConfig = configPortletifier.getPluginConfig();
+
+  PortletMixiner.call(this, {
+    pluginConfig,
+    portletForwarder: tracelogService,
+    portletArguments: {
+      L, T, blockRef,
+      filestoreHandler, errorBuilder, tracelogService, webweaverService
+    },
+    PortletConstructor: Portlet,
+  });
+
+  // @deprecated
+  this.getFilestoreLayer = function() {
+    return this.hasPortlet() && this.getPortlet().getFilestoreLayer() || undefined;
+  };
+}
+
+function Portlet (params = {}) {
+  const { L, T, portletName, portletConfig } = params;
+  const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
+
+  const contextPath = portletConfig.contextPath || "/filestore";
+
+  const tmpRootDir = os.tmpdir() + portletConfig.tmpBasePath || "/devebot/filestore";
+  const uploadDir = portletConfig.uploadDir;
+  const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
+  const thumbnailCfg = lodash.pick(portletConfig, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
+  const thumbnailFrameMatcher = ThumbnailFrameMatcher.newInstance(portletConfig.thumbnailFrames);
 
   const express = webweaverService.express;
 
@@ -64,10 +90,10 @@ function Service (params = {}) {
     };
   };
 
-  if (pluginCfg.autowired !== false) {
-    tracelogService.push([
+  if (portletConfig.autowired !== false && tracelogService.hasPortlet(portletName)) {
+    tracelogService.getPortlet(portletName).push([
       this.getFilestoreLayer()
-    ], pluginCfg.priority);
+    ], portletConfig.priority);
   }
 };
 
@@ -483,6 +509,7 @@ function renderPacketToResponse (packet = {}, res) {
 }
 
 Service.referenceHash = {
+  configPortletifier: "portletifier",
   errorBuilder: "initializer",
   filestoreHandler: "handler",
   tracelogService: "app-tracelog/tracelogService",

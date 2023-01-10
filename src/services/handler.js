@@ -8,21 +8,54 @@ const uuid = require("uuid");
 
 const Devebot = require("devebot");
 const Promise = Devebot.require("bluebird");
+const chores = Devebot.require("chores");
 const lodash = Devebot.require("lodash");
+
+const { PortletMixiner } = require("app-webserver").require("portlet");
 
 const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
 
 function Handler (params = {}) {
-  const { loggingFactory, mongoManipulator } = params;
+  const { packageName, loggingFactory, configPortletifier, tracelogService, mongoManipulator } = params;
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
-  const pluginCfg = params.sandboxConfig || {};
-  const contextPath = pluginCfg.contextPath || "/filestore";
-  const uploadDir = pluginCfg.uploadDir;
-  const collectionName = pluginCfg.collections.FILE;
+  const pluginConfig = configPortletifier.getPluginConfig();
+
+  PortletMixiner.call(this, {
+    pluginConfig,
+    portletForwarder: tracelogService,
+    portletArguments: {
+      L, T, blockRef,
+      mongoManipulator
+    },
+    PortletConstructor: Portlet,
+  });
+
+  this.getFileInfo = function (fileId) {
+    return this.hasPortlet() && this.getPortlet().getFileInfo(fileId) || undefined;
+  };
+
+  this.getFileUrls = function (fileIds = []) {
+    return this.hasPortlet() && this.getPortlet().getFileUrls(fileIds) || undefined;
+  };
+
+  this.saveFile = function (args = {}) {
+    return this.hasPortlet() && this.getPortlet().saveFile(args) || undefined;
+  };
+}
+
+function Portlet (params = {}) {
+  const { portletConfig } = params;
+  const { T, L, mongoManipulator } = params;
+
+  // const portletConfig = params.sandboxConfig || {};
+  const contextPath = portletConfig.contextPath || "/filestore";
+  const uploadDir = portletConfig.uploadDir;
+  const collectionName = portletConfig.collections.FILE;
 
   this.getFileInfo = function (fileId) {
     return mongoManipulator.findOneDocument(collectionName, {
@@ -124,8 +157,10 @@ function Handler (params = {}) {
 };
 
 Handler.referenceHash = {
+  configPortletifier: "portletifier",
   initializer: "initializer",
   errorManager: "app-errorlist/manager",
+  tracelogService: "app-tracelog/tracelogService",
   mongoManipulator: "mongojs#manipulator"
 };
 

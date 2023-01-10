@@ -1,5 +1,8 @@
 "use strict";
 
+const Devebot = require("devebot");
+const lodash = Devebot.require("lodash");
+
 function Service (params = {}) {
   const { packageName, sandboxConfig, errorManager } = params;
 
@@ -7,18 +10,16 @@ function Service (params = {}) {
     errorCodes: sandboxConfig.errorCodes
   });
 
-  const errorStringMappings = {
-    "FileIdNotFoundError": "fileId_not_found",
-    "FileIdMustNotBeEmptyError": "fileId_is_empty",
-    "FileDataMustNotBeEmptyError": "invalid_upload_fields",
-    "HeightMustNotBeEmptyError": "height_is_empty",
-    "WidthMustNotBeEmptyError": "width_is_empty",
-  };
+  const legacyErrorStringEnabled = lodash.get(sandboxConfig, "legacyErrorStringEnabled");
+  const legacyErrorStringMappings = lodash.get(sandboxConfig, "legacyErrorStringMappings");
+  const legacyErrorStringSize = lodash.size(legacyErrorStringMappings);
 
   this.newError = function(name, opts) {
-    const errorString = errorStringMappings[name];
-    if (errorString) {
-      return errorString;
+    if (legacyErrorStringEnabled && legacyErrorStringSize > 0) {
+      const errorString = legacyErrorStringMappings[name];
+      if (errorString) {
+        return errorString;
+      }
     }
     return errorBuilder.newError(name, opts);
   };
