@@ -25,20 +25,14 @@ function Service (params = {}) {
   const { packageName, loggingFactory, configPortletifier } = params;
   const { errorBuilder, filestoreHandler, tracelogService, webweaverService } = params;
 
-  const L = loggingFactory.getLogger();
-  const T = loggingFactory.getTracer();
-  const blockRef = chores.getBlockRef(__filename, packageName);
+  const express = webweaverService.express;
 
   const pluginConfig = configPortletifier.getPluginConfig();
 
   PortletMixiner.call(this, {
-    pluginConfig,
-    portletForwarder: tracelogService,
-    portletArguments: {
-      L, T, blockRef,
-      packageName, loggingFactory,
-      errorBuilder, filestoreHandler, tracelogService, webweaverService
-    },
+    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletReferenceHolders: { filestoreHandler, tracelogService },
+    portletArguments: { packageName, loggingFactory, express, errorBuilder },
     PortletConstructor: Portlet,
   });
 
@@ -51,8 +45,8 @@ function Service (params = {}) {
 Object.assign(Service.prototype, PortletMixiner.prototype);
 
 function Portlet (params = {}) {
-  const { packageName, loggingFactory, portletName, portletConfig } = params;
-  const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
+  const { packageName, loggingFactory, express, portletName, portletConfig } = params;
+  const { errorBuilder, filestoreHandler, tracelogService } = params;
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
@@ -70,8 +64,6 @@ function Portlet (params = {}) {
   const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(portletConfig, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
   const thumbnailFrameMatcher = ThumbnailFrameMatcher.newInstance(portletConfig.thumbnailFrames);
-
-  const express = webweaverService.express;
 
   const filestoreRouter = express();
 
