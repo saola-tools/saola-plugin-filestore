@@ -15,18 +15,19 @@ const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const portlet = require("app-webserver").require("portlet");
+const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
 
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
 
 function Service (params = {}) {
   const { packageName, loggingFactory, configPortletifier } = params;
-  const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
-  const blockRef = chores.getBlockRef(__filename, packageName);
+  const { errorBuilder, filestoreHandler, tracelogService, webweaverService } = params;
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
   const pluginConfig = configPortletifier.getPluginConfig();
 
@@ -35,7 +36,8 @@ function Service (params = {}) {
     portletForwarder: tracelogService,
     portletArguments: {
       L, T, blockRef,
-      filestoreHandler, errorBuilder, tracelogService, webweaverService
+      packageName, loggingFactory,
+      errorBuilder, filestoreHandler, tracelogService, webweaverService
     },
     PortletConstructor: Portlet,
   });
@@ -46,9 +48,20 @@ function Service (params = {}) {
   };
 }
 
+Object.assign(Service.prototype, PortletMixiner.prototype);
+
 function Portlet (params = {}) {
-  const { L, T, portletName, portletConfig } = params;
+  const { packageName, loggingFactory, portletName, portletConfig } = params;
   const { filestoreHandler, errorBuilder, tracelogService, webweaverService } = params;
+
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
+
+  L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName }).toMessage({
+    tags: [ blockRef ],
+    text: "The Portlet[${blockRef}][${portletName}] is loading"
+  }));
 
   const contextPath = portletConfig.contextPath || "/filestore";
 
@@ -90,8 +103,8 @@ function Portlet (params = {}) {
     };
   };
 
-  if (portletConfig.autowired !== false && tracelogService.hasPortlet(portletName)) {
-    tracelogService.getPortlet(portletName).push([
+  if (portletConfig.autowired !== false) {
+    tracelogService.push([
       this.getFilestoreLayer()
     ], portletConfig.priority);
   }

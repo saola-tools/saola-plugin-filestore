@@ -25,11 +25,11 @@ describe("filestoreService", function() {
   };
 
   describe("createDir()", function() {
-    let Handler, createDir;
+    let Service, createDir;
 
     beforeEach(function() {
-      Handler = mockit.acquire("service", serviceLocation);
-      createDir = mockit.get(Handler, "createDir");
+      Service = mockit.acquire("service", serviceLocation);
+      createDir = mockit.get(Service, "createDir");
     });
 
     it("mkdirp raises an error [EPERM: operation not permitted]", function() {
@@ -64,12 +64,12 @@ describe("filestoreService", function() {
 
   describe("removeDir()", function() {
     const testDirPath = "/tmp/app-filestore-test";
-    let Handler, createDir, removeDir;
+    let Service, createDir, removeDir;
 
     beforeEach(function() {
-      Handler = mockit.acquire("service", serviceLocation);
-      createDir = mockit.get(Handler, "createDir");
-      removeDir = mockit.get(Handler, "removeDir");
+      Service = mockit.acquire("service", serviceLocation);
+      createDir = mockit.get(Service, "createDir");
+      removeDir = mockit.get(Service, "removeDir");
     });
 
     it("A directory is removed successfully", function() {
@@ -101,11 +101,11 @@ describe("filestoreService", function() {
   });
 
   describe("getMimeType()", function() {
-    let Handler, getMimeType;
+    let Service, getMimeType;
 
     beforeEach(function() {
-      Handler = mockit.acquire("service", serviceLocation);
-      getMimeType = mockit.get(Handler, "getMimeType");
+      Service = mockit.acquire("service", serviceLocation);
+      getMimeType = mockit.get(Service, "getMimeType");
     });
 
     it("mimeType is detected from the extension part of the filename", function() {
@@ -198,11 +198,11 @@ describe("filestoreService", function() {
   describe("createUploadMiddleware()", function() {
     const context = lodash.merge({}, ctx);
 
-    let Handler, createUploadMiddleware;
+    let Service, createUploadMiddleware;
 
     beforeEach(function() {
-      Handler = mockit.acquire("service", serviceLocation);
-      createUploadMiddleware = mockit.get(Handler, "createUploadMiddleware");
+      Service = mockit.acquire("service", serviceLocation);
+      createUploadMiddleware = mockit.get(Service, "createUploadMiddleware");
     });
 
     it("ok", function() {

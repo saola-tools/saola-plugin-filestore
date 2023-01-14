@@ -11,7 +11,8 @@ const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const lodash = Devebot.require("lodash");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const portlet = require("app-webserver").require("portlet");
+const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
 
 const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
@@ -19,38 +20,44 @@ const stringUtil = require("../supports/string-util");
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService, mongoManipulator } = params;
 
-  const L = loggingFactory.getLogger();
-  const T = loggingFactory.getTracer();
-  const blockRef = chores.getBlockRef(__filename, packageName);
-
   const pluginConfig = configPortletifier.getPluginConfig();
 
   PortletMixiner.call(this, {
-    pluginConfig,
-    portletForwarder: tracelogService,
-    portletArguments: {
-      L, T, blockRef,
-      mongoManipulator
-    },
+    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletReferenceHolders: { tracelogService },
+    portletArguments: { packageName, loggingFactory, mongoManipulator },
     PortletConstructor: Portlet,
   });
 
+  // @deprecated
   this.getFileInfo = function (fileId) {
     return this.hasPortlet() && this.getPortlet().getFileInfo(fileId) || undefined;
   };
 
+  // @deprecated
   this.getFileUrls = function (fileIds = []) {
     return this.hasPortlet() && this.getPortlet().getFileUrls(fileIds) || undefined;
   };
 
+  // @deprecated
   this.saveFile = function (args = {}) {
     return this.hasPortlet() && this.getPortlet().saveFile(args) || undefined;
   };
 }
 
+Object.assign(Handler.prototype, PortletMixiner.prototype);
+
 function Portlet (params = {}) {
-  const { portletConfig } = params;
-  const { T, L, mongoManipulator } = params;
+  const { packageName, loggingFactory, portletConfig, portletName, mongoManipulator } = params;
+
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
+
+  L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName }).toMessage({
+    tags: [ blockRef ],
+    text: "The Portlet[${blockRef}][${portletName}] is loading"
+  }));
 
   // const portletConfig = params.sandboxConfig || {};
   const contextPath = portletConfig.contextPath || "/filestore";
@@ -158,8 +165,6 @@ function Portlet (params = {}) {
 
 Handler.referenceHash = {
   configPortletifier: "portletifier",
-  initializer: "initializer",
-  errorManager: "app-errorlist/manager",
   tracelogService: "app-tracelog/tracelogService",
   mongoManipulator: "mongojs#manipulator"
 };
