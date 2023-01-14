@@ -33,6 +33,12 @@ Build the module:
 npm run build
 ```
 
+Enable multiple portlets:
+
+```shell
+export DEVEBOT_SANDBOX=portlets
+```
+
 Start the example:
 
 ```shell
