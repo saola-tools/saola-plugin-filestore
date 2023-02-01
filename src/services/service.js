@@ -15,8 +15,7 @@ const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
-const portlet = require("app-webserver").require("portlet");
-const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
+const { PortletMixiner } = require("app-webserver").require("portlet");
 
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
@@ -27,10 +26,8 @@ function Service (params = {}) {
 
   const express = webweaverService.express;
 
-  const pluginConfig = configPortletifier.getPluginConfig();
-
   PortletMixiner.call(this, {
-    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletDescriptors: configPortletifier.getPortletDescriptors(["default"]),
     portletReferenceHolders: { filestoreHandler, tracelogService },
     portletArguments: { packageName, loggingFactory, express, errorBuilder },
     PortletConstructor: Portlet,

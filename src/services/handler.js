@@ -11,8 +11,7 @@ const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const lodash = Devebot.require("lodash");
 
-const portlet = require("app-webserver").require("portlet");
-const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
+const { PortletMixiner } = require("app-webserver").require("portlet");
 
 const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
@@ -20,10 +19,8 @@ const stringUtil = require("../supports/string-util");
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService, mongoManipulator } = params;
 
-  const pluginConfig = configPortletifier.getPluginConfig();
-
   PortletMixiner.call(this, {
-    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletDescriptors: configPortletifier.getPortletDescriptors(["default"]),
     portletReferenceHolders: { tracelogService },
     portletArguments: { packageName, loggingFactory, mongoManipulator },
     PortletConstructor: Portlet,
