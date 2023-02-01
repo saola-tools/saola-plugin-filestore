@@ -1,12 +1,12 @@
 {
-  "name": "app-filestore",
+  "name": "@saola/plugin-filestore",
   "version": "0.4.1",
-  "description": "Devebot application filestore layerware",
-  "homepage": "https://github.com/apporo/app-filestore.git",
+  "description": "Saola filestore plugin",
+  "homepage": "https://github.com/saolajs/saola-plugin-filestore.git",
   "author": {
-    "name": "apporo",
-    "email": "apporo@devebot.com",
-    "url": "https://github.com/apporo"
+    "name": "SaolaJS",
+    "email": "contact@saolajs.com",
+    "url": "https://github.com/saolajs"
   },
   "main": "index.js",
   "files": [
@@ -17,33 +17,35 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib",
-    "clean-modules": "rm -rf ./node_modules && rm ./package-lock.json",
+    "clean-modules": "rm -rf ./node_modules ./package-lock.json",
+    "reset-modules": "npm run clean-modules && npm run bootstrap",
     "bootstrap": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
     "build": "npm exec -- babel ./src -d ./lib",
     "check": "npm exec -- eslint config src index.js",
     "check-silent": "npm exec -- eslint --quiet config src index.js",
-    "pretest": "npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-test} npm run build",
+    "pretest": "npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-test} npm run build",
     "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/**/*-test.js ./test/bdd/*-test.js",
     "test": "npm run testOnly",
-    "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-production} npm run build",
+    "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"
   },
   "keywords": [
-    "devebot",
-    "devebot-plugin"
+    "saola",
+    "saola-plugin"
   ],
   "peerDependencies": {
-    "app-errorlist": "^0.4.0",
-    "app-tracelog": "^0.4.0",
-    "app-webweaver": "^0.4.0",
-    "devebot-co-mongojs": "^0.4.0"
+    "@saola/core": "^0.4.0",
+    "@saola/plugin-errorlist": "^0.4.0",
+    "@saola/plugin-logtracer": "^0.4.0",
+    "@saola/plugin-webweaver": "^0.4.0",
+    "@saola/linker-mongojs": "^0.4.0"
   },
   "dependencies": {
-    "app-errorlist": "^0.4.0",
-    "app-tracelog": "^0.4.0",
-    "app-webweaver": "^0.4.0",
-    "devebot": "^0.4.1",
-    "devebot-co-mongojs": "^0.4.0",
+    "@saola/core": "^0.4.0",
+    "@saola/plugin-errorlist": "^0.4.0",
+    "@saola/plugin-logtracer": "^0.4.0",
+    "@saola/plugin-webweaver": "^0.4.0",
+    "@saola/linker-mongojs": "^0.4.0",
     "easyimage": "^2.1.0",
     "formidable": "^1.0.17",
     "mime": "^3.0.0",

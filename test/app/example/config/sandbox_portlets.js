@@ -2,7 +2,7 @@
 
 module.exports = {
   plugins: {
-    appFilestore: {
+    pluginFilestore: {
       portlets: {
         default: {},
         manager: {}

@@ -1,6 +1,6 @@
 module.exports = {
   plugins: {
-    appFilestore: {
+    pluginFilestore: {
       contextPath: "/filestore",
       collections: {
         FILE: "files"
@@ -72,7 +72,7 @@ module.exports = {
   },
   bridges: {
     mongojs: {
-      appFilestore: {
+      pluginFilestore: {
         manipulator: {
           connection_options: {
             host: "127.0.0.1",

@@ -8,7 +8,7 @@ app.getSandboxService = function(serviceName) {
   });
 }
 
-app.getSandboxService('app-filestore/handler').then(function(handler) {
+app.getSandboxService('@saola/plugin-filestore/handler').then(function(handler) {
   var fileBase64 = fs.readFileSync(path.join(__dirname, './images/logbeat.png')).toString('base64');
   false && console.log('file content in base64 format: \n%s', fileBase64);
   var ok = handler.saveFile({

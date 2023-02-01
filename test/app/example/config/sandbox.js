@@ -6,7 +6,7 @@ const contextPath = "/example";
 
 module.exports = {
   plugins: {
-    appFilestore: {
+    pluginFilestore: {
       contextPath: contextPath,
       uploadDir: path.join(__dirname, "../data"),
       thumbnailFrames: [

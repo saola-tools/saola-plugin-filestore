@@ -6,12 +6,12 @@ const path = require("path");
 const mv = require("mv");
 const uuid = require("uuid");
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const lodash = Devebot.require("lodash");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
 
 const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
@@ -162,7 +162,7 @@ function Portlet (params = {}) {
 
 Handler.referenceHash = {
   configPortletifier: "portletifier",
-  tracelogService: "app-tracelog/tracelogService",
+  tracelogService: "@saola/plugin-logtracer/tracelogService",
   mongoManipulator: "mongojs#manipulator"
 };
 

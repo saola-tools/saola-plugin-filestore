@@ -1,6 +1,6 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const path = require("path");
@@ -17,7 +17,7 @@ describe("app.server", function() {
     //
     before(function() {
       chores.setEnvironments({
-        DEVEBOT_FORCING_SILENT: "devebot,webserver",
+        SAOLA_FORCING_SILENT: "framework,webserver",
         LOGOLITE_FULL_LOG_MODE: "false",
         LOGOLITE_ALWAYS_ENABLED: "all",
         LOGOLITE_ALWAYS_MUTED: "all"
@@ -74,7 +74,7 @@ describe("app.server", function() {
     //
     before(function() {
       chores.setEnvironments({
-        DEVEBOT_FORCING_SILENT: "devebot,webserver",
+        SAOLA_FORCING_SILENT: "framework,webserver",
         LOGOLITE_FULL_LOG_MODE: "false",
         LOGOLITE_ALWAYS_ENABLED: "all",
         LOGOLITE_ALWAYS_MUTED: "all"

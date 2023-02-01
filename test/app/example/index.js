@@ -1,12 +1,12 @@
 "use strict";
 
-var devebot = require("devebot").parseArguments(require.main === module);
-var path = require("path");
+const path = require("path");
+const Devebot = require("@saola/core").parseArguments(require.main === module);
 
-var app = devebot.launchApplication({
+const app = Devebot.launchApplication({
   appRootPath: __dirname
 }, [{
-  name: "app-filestore",
+  name: "@saola/plugin-filestore",
   path: path.join(__dirname, "../../../index.js")
 }]);
 

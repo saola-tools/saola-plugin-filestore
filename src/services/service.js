@@ -10,12 +10,12 @@ const formidable = require("formidable");
 const mime = require("mime");
 const uuid = require("uuid");
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
 
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
@@ -56,7 +56,7 @@ function Portlet (params = {}) {
 
   const contextPath = portletConfig.contextPath || "/filestore";
 
-  const tmpRootDir = os.tmpdir() + portletConfig.tmpBasePath || "/devebot/filestore";
+  const tmpRootDir = os.tmpdir() + portletConfig.tmpBasePath || "/saola-plugin-filestore";
   const uploadDir = portletConfig.uploadDir;
   const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(portletConfig, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
@@ -86,7 +86,7 @@ function Portlet (params = {}) {
 
   this.getFilestoreLayer = function() {
     return {
-      name: "app-filestore-service",
+      name: "@saola/plugin-filestore-service",
       path: contextPath,
       middleware: filestoreRouter
     };
@@ -514,8 +514,8 @@ Service.referenceHash = {
   configPortletifier: "portletifier",
   errorBuilder: "initializer",
   filestoreHandler: "handler",
-  tracelogService: "app-tracelog/tracelogService",
-  webweaverService: "app-webweaver/webweaverService"
+  tracelogService: "@saola/plugin-logtracer/tracelogService",
+  webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
 
 module.exports = Service;

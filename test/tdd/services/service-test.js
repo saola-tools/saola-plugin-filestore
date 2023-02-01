@@ -3,10 +3,10 @@
 const os = require("os");
 const fs = require("fs").promises;
 
-const devebot = require("devebot");
-const Promise = devebot.require("bluebird");
-const lodash = devebot.require("lodash");
-const chores = devebot.require("chores");
+const Devebot = require("@saola/core");
+const Promise = Devebot.require("bluebird");
+const lodash = Devebot.require("lodash");
+const chores = Devebot.require("chores");
 const { assert, mockit } = require("liberica");
 const path = require("path");
 const util = require("util");
@@ -20,8 +20,8 @@ describe("filestoreService", function() {
   const ctx = {
     L: loggingFactory.getLogger(),
     T: loggingFactory.getTracer(),
-    blockRef: "app-filestore/service",
-    tmpRootDir: os.tmpdir() + "/devebot/filestore"
+    blockRef: "@saola/plugin-filestore/service",
+    tmpRootDir: os.tmpdir() + "/saola-plugin-filestore"
   };
 
   describe("createDir()", function() {
@@ -63,7 +63,7 @@ describe("filestoreService", function() {
   }
 
   describe("removeDir()", function() {
-    const testDirPath = "/tmp/app-filestore-test";
+    const testDirPath = "/tmp/@saola/plugin-filestore-test";
     let Service, createDir, removeDir;
 
     beforeEach(function() {

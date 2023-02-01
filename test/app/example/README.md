@@ -1,4 +1,4 @@
-# app-filestore example
+# @saola/plugin-filestore example
 
 ## Usage
 
@@ -36,13 +36,13 @@ npm run build
 Enable multiple portlets:
 
 ```shell
-export DEVEBOT_SANDBOX=portlets
+export SAOLA_SANDBOX=portlets
 ```
 
 Start the example:
 
 ```shell
-export DEBUG=devebot*,app*
+export DEBUG=saola*,app*
 export LOGOLITE_DEBUGLOG_ENABLED=true
 node test/app/example
 ```

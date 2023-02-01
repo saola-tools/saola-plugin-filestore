@@ -1,6 +1,6 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 
 function Servlet (params = {}) {

@@ -1,11 +1,11 @@
 {
-  "name": "app-filestore-example",
+  "name": "saola-plugin-filestore-example",
   "version": "0.1.0",
-  "description": "Devebot app-filestore Example",
+  "description": "Saola filestore plugin example",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "devebot",
+  "author": "SaolaJS",
   "license": "MIT"
 }

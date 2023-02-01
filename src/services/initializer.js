@@ -1,6 +1,6 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const lodash = Devebot.require("lodash");
 
 function Service (params = {}) {
@@ -26,7 +26,7 @@ function Service (params = {}) {
 }
 
 Service.referenceHash = {
-  errorManager: "app-errorlist/manager"
+  errorManager: "@saola/plugin-errorlist/manager"
 };
 
 module.exports = Service;
