@@ -15,7 +15,7 @@ const Promise = Devebot.require("bluebird");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 
-const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
+const { PortletMixiner } = Devebot.require("portlet");
 
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");

@@ -1,5 +1,5 @@
 module.exports = {
-  devebot: {
+  framework: {
     mode: "silent"
   },
   logger: {
