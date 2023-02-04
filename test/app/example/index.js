@@ -1,6 +1,8 @@
 "use strict";
 
 const path = require("path");
+const signtrap = require("signtrap");
+
 const Devebot = require("@saola/core").parseArguments(require.main === module);
 
 const app = Devebot.launchApplication({
@@ -14,14 +16,11 @@ const app = Devebot.launchApplication({
 
 if (require.main === module) {
   app.server.start().then(function() {
-    const stop = function() {
+    signtrap(function(signal, err) {
       app.server.stop().then(function() {
-        console.log("The server has been stopped.");
+        console.info("The server is terminated now!");
       });
-    };
-    process.on("SIGINT", stop);
-    process.on("SIGQUIT", stop);
-    process.on("SIGTERM", stop);
+    });
   });
 }
 
