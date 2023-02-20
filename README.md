@@ -1,3 +1,3 @@
 # @saola/plugin-filestore
 
-> Devebot application filestore layerware
+> Saola File Store plugin

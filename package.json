@@ -1,13 +1,8 @@
 {
   "name": "@saola/plugin-filestore",
   "version": "0.4.1",
-  "description": "Saola filestore plugin",
-  "homepage": "https://github.com/saolajs/saola-plugin-filestore.git",
-  "author": {
-    "name": "SaolaJS",
-    "email": "contact@saolajs.com",
-    "url": "https://github.com/saolajs"
-  },
+  "description": "Saola File Store plugin",
+  "author": "Saola Development Team",
   "main": "index.js",
   "files": [
     "bin/",
@@ -17,9 +12,9 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib",
-    "clean-modules": "rm -rf ./node_modules ./package-lock.json",
-    "reset-modules": "npm run clean-modules && npm run bootstrap",
-    "bootstrap": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
+    "clean-modules": "rm -rf ./node_modules ./package-lock.json ./test/node_modules ./test/package-lock.json",
+    "setup-modules": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
+    "reset-modules": "npm run clean-modules && npm run setup-modules",
     "build": "npm exec -- babel ./src -d ./lib",
     "check": "npm exec -- eslint config src index.js",
     "check-silent": "npm exec -- eslint --quiet config src index.js",
@@ -28,6 +23,10 @@
     "test": "npm run testOnly",
     "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saola-tools/saola-plugin-filestore.git"
   },
   "keywords": [
     "saola",

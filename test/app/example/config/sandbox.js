@@ -14,7 +14,7 @@ module.exports = {
         [512, 288],
       ],
     },
-    appTracelog: {
+    pluginLogtracer: {
       tracingPaths: [ contextPath ],
       tracingBoundaryEnabled: true,
     },
