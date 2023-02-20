@@ -1,8 +1,8 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const chores = Devebot.require("chores");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const chores = FRWK.require("chores");
 const path = require("path");
 const { assert, mockit, sinon } = require("liberica");
 

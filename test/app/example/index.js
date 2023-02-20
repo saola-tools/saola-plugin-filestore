@@ -3,9 +3,9 @@
 const path = require("path");
 const signtrap = require("signtrap");
 
-const Devebot = require("@saola/core").parseArguments(require.main === module);
+const FRWK = require("@saola/core").parseArguments(require.main === module);
 
-const app = Devebot.launchApplication({
+const app = FRWK.launchApplication({
   appRootPath: __dirname
 }, [
   {

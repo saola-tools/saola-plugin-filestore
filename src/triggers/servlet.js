@@ -1,7 +1,7 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
 
 function Servlet (params = {}) {
   const { mongoManipulator } = params;

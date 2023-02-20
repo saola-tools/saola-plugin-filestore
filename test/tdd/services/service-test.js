@@ -3,10 +3,10 @@
 const os = require("os");
 const fs = require("fs").promises;
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const lodash = Devebot.require("lodash");
-const chores = Devebot.require("chores");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const lodash = FRWK.require("lodash");
+const chores = FRWK.require("chores");
 const { assert, mockit } = require("liberica");
 const path = require("path");
 const util = require("util");

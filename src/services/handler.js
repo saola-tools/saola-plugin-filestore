@@ -6,12 +6,12 @@ const path = require("path");
 const mv = require("mv");
 const uuid = require("uuid");
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const chores = Devebot.require("chores");
-const lodash = Devebot.require("lodash");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const chores = FRWK.require("chores");
+const lodash = FRWK.require("lodash");
 
-const { PortletMixiner } = Devebot.require("portlet");
+const { PortletMixiner } = FRWK.require("portlet");
 
 const { createDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");

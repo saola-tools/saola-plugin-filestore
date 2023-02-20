@@ -1,7 +1,7 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const chores = Devebot.require("chores");
+const FRWK = require("@saola/core");
+const chores = FRWK.require("chores");
 
 const app = require("../app/simplest");
 

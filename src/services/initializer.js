@@ -1,7 +1,7 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const lodash = Devebot.require("lodash");
+const FRWK = require("@saola/core");
+const lodash = FRWK.require("lodash");
 
 function Service (params = {}) {
   const { packageName, sandboxConfig, errorManager } = params;

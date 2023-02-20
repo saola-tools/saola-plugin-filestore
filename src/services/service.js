@@ -10,12 +10,12 @@ const formidable = require("formidable");
 const mime = require("mime");
 const uuid = require("uuid");
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const lodash = Devebot.require("lodash");
-const chores = Devebot.require("chores");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const lodash = FRWK.require("lodash");
+const chores = FRWK.require("chores");
 
-const { PortletMixiner } = Devebot.require("portlet");
+const { PortletMixiner } = FRWK.require("portlet");
 
 const { createDir, removeDir } = require("../supports/system-util");
 const stringUtil = require("../supports/string-util");
