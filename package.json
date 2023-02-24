@@ -37,6 +37,7 @@
     "@saola/linker-mongojs": "^0.4.0",
     "@saola/plugin-errorlist": "^0.4.0",
     "@saola/plugin-logtracer": "^0.4.0",
+    "@saola/plugin-secrets-hub": "^0.4.0",
     "@saola/plugin-webweaver": "^0.4.0"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "@saola/linker-mongojs": "^0.4.0",
     "@saola/plugin-errorlist": "^0.4.0",
     "@saola/plugin-logtracer": "^0.4.0",
+    "@saola/plugin-secrets-hub": "^0.4.0",
     "@saola/plugin-webweaver": "^0.4.0",
     "easyimage": "^2.1.0",
     "formidable": "^1.0.17",

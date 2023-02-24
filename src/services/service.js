@@ -86,7 +86,7 @@ function Portlet (params = {}) {
 
   this.getFilestoreLayer = function() {
     return {
-      name: "@saola/plugin-filestore-service",
+      name: "saola-plugin-filestore-service",
       path: contextPath,
       middleware: filestoreRouter
     };

@@ -5,15 +5,17 @@ const Promise = FRWK.require("bluebird");
 const lodash = FRWK.require("lodash");
 
 function Servlet (params = {}) {
-  const { sandboxConfig, sandboxRegistry, mongoManipulator } = params;
+  const { sandboxConfig, sandboxRegistry, secretValueInvoker, mongoManipulator } = params;
 
   const { secretsManagerLocation } = sandboxConfig;
   const secretsManager = sandboxRegistry.lookupService(secretsManagerLocation);
 
   this.start = function() {
     let p = Promise.resolve();
-    if (lodash.isFunction(mongoManipulator.setup)) {
-      p = loadSecretValue({ secretsManager }).then(mongoManipulator.setup.bind(mongoManipulator));
+    if (lodash.isFunction(mongoManipulator.setup) && secretValueInvoker) {
+      p = secretValueInvoker.loadSecretValue({ secretsManager }).then(function(secretStore) {
+        return mongoManipulator.setup({ secretsManager, secretStore });
+      });
     }
     return p;
   };
@@ -30,28 +32,9 @@ function Servlet (params = {}) {
 };
 
 Servlet.referenceHash = {
+  mongoManipulator: "mongojs#manipulator",
   sandboxRegistry: "@saola/core/sandboxRegistry",
-  mongoManipulator: "mongojs#manipulator"
+  secretValueInvoker: "@saola/plugin-secrets-hub/invoker",
 };
-
-function loadSecretValue (context) {
-  const { secretsManager } = context || {};
-  //
-  let p = Promise.resolve();
-  if (secretsManager && lodash.isFunction(secretsManager.getSecretValue)) {
-    p = secretsManager.getSecretValue({
-      transformer: function({ status, value, error }) {
-        if (status < 0) {
-          return null;
-        }
-        return value;
-      }
-    });
-  }
-  //
-  return p.then(function(secretStore) {
-    return lodash.assign(context, { secretStore });
-  });
-}
 
 module.exports = Servlet;
