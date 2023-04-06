@@ -440,9 +440,14 @@ function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
   L && L.has("silly") && L.log("silly", T && T.add({ filename, mimetype }).toMessage({
     text: " - The file [${filename}] (${mimetype}) is downloading"
   }));
+  res.setHeader("Content-disposition", "attachment; filename=" + filename);
+  res.setHeader("Content-type", mimetype);
+  return transferFileToOutputStream.call(this, fileLocationPath, res);
+}
+
+function transferFileToOutputStream (fileLocationPath, outputStream) {
+  const { L, T } = this || {};
   return new Promise(function(resolve, reject) {
-    res.setHeader("Content-disposition", "attachment; filename=" + filename);
-    res.setHeader("Content-type", mimetype);
     const filestream = fs.createReadStream(fileLocationPath);
     filestream.on("error", function(err) {
       reject(err);
@@ -453,7 +458,7 @@ function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
       }));
       resolve();
     });
-    filestream.pipe(res);
+    filestream.pipe(outputStream);
   });
 }
 
