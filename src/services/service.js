@@ -51,7 +51,7 @@ function Portlet (params = {}) {
 
   const contextPath = portletConfig.contextPath || "/filestore";
 
-  const tmpRootDir = filestoreHandler.getTmpRootDir();
+  const tmpRootDir = filestoreHandler.getTmpDirHome();
   const uploadDir = portletConfig.uploadDir;
   const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(portletConfig, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);

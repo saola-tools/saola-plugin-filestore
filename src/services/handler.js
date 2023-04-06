@@ -62,6 +62,7 @@ function Portlet (params = {}) {
   // const portletConfig = params.sandboxConfig || {};
   const contextPath = portletConfig.contextPath || "/filestore";
   const uploadDir = portletConfig.uploadDir;
+  const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
   const collectionName = portletConfig.collections.FILE;
   const tmpRootDir = _osTmpDir() + portletConfig.tmpBasePath || "/saola-plugin-filestore";
 
@@ -167,18 +168,20 @@ function Portlet (params = {}) {
     return transferFileToOutputStream.call(this, fileLocationPath, outputStream);
   };
 
-  this.createImageThumbnail = function(fileContext, {thumbnailDir, uploadDir} = {}) {
+  this.createImageThumbnail = function(fileContext, options = {}) {
     const { fileInfo } = fileContext;
+    const _uploadDir = lodash.get(options, "uploadDir", uploadDir);
+    const _thumbnailDir = lodash.get(options, "thumbnailDir", thumbnailDir);
     if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
       return getImageNotFoundThumbnail.call(this, {
-        thumbnailDir,
+        thumbnailDir: _thumbnailDir,
         width: fileContext.width,
         height: fileContext.height
       });
     } else {
       return createImageThumbnail.call(this, {
-        uploadDir,
-        thumbnailDir,
+        uploadDir: _uploadDir,
+        thumbnailDir: _thumbnailDir,
         fileId: fileContext.fileId,
         fileName: fileInfo.name,
         width: fileContext.width,
@@ -187,8 +190,22 @@ function Portlet (params = {}) {
     }
   };
 
-  this.getTmpRootDir = function () {
+  this.getTmpDirHome = function () {
     return tmpRootDir;
+  };
+
+  this.getTmpDirOf = function (tmpId) {
+    return _getTmpDirOf.call({L, T, tmpRootDir}, tmpId);
+  };
+
+  this.createTmpDir = function (context) {
+    const { tmpDir } = context || {};
+    if (!tmpDir) {
+      return Promise.reject(new Error("tmpDir is not provided"));
+    }
+    return createDir(tmpDir).then(function(newDirPath) {
+      return context;
+    });
   };
 
   this.getMimeType = function (fileLocationPath, { basePath } = {}) {
@@ -257,7 +274,7 @@ function resizeAndCropImage (box) {
           L && L.has("silly") && L.log("silly", T && T.toMessage({
             text: " - Converted: " + image.width + " x " + image.height
           }));
-          resolve(null, box.thumbnailFile);
+          resolve(box.thumbnailFile);
         },
         function (err) {
           L && L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
@@ -271,6 +288,20 @@ function resizeAndCropImage (box) {
 function _osTmpDir () {
   return os.tmpdir();
 }
+
+function _getTmpDirOf (tmpId) {
+  tmpId = tmpId || uuid.v4();
+  const { L, T, tmpRootDir } = this || {};
+  const tmpDir = path.join(tmpRootDir, tmpId);
+  //
+  L && L.has("silly") && L.log("silly", T && T.add({ tmpDir }).toMessage({
+    text: " - the tmpDir: ${tmpDir}"
+  }));
+  //
+  return createDir(tmpDir).then(function(newDirPath) {
+    return tmpDir;
+  });
+};
 
 function getMimeType (fileNameOrPath) {
   const mimeType = mime.getType(fileNameOrPath);
