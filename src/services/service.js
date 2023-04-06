@@ -3,9 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const util = require("util");
 
-const easyimage = require("easyimage");
 const formidable = require("formidable");
 const mime = require("mime");
 const uuid = require("uuid");
@@ -269,23 +267,7 @@ function createShowPictureMiddleware (context) {
     })
     .then(function(fileInfo) {
       box.fileInfo = fileInfo;
-      //
-      if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
-        return getImageNotFoundThumbnail.bind(that)({
-          thumbnailDir,
-          width: box.width,
-          height: box.height
-        });
-      } else {
-        return createImageThumbnail.bind(that)({
-          uploadDir,
-          thumbnailDir,
-          fileId: box.fileId,
-          fileName: fileInfo.name,
-          width: box.width,
-          height: box.height
-        });
-      }
+      return filestoreHandler.createImageThumbnail(box, {thumbnailDir, uploadDir});
     })
     .then(function(thumbnailFile) {
       box.thumbnailFile = thumbnailFile;
@@ -351,53 +333,6 @@ function getMimeType (fileNameOrPath) {
     return "application/octet-stream";
   }
   return mimeType;
-}
-
-function getImageNotFoundThumbnail ({ staticDir, thumbnailDir, width, height } = {}) {
-  staticDir = staticDir || path.join(__dirname, "../../data/");
-  thumbnailDir = thumbnailDir || staticDir;
-  //
-  const originFile = path.join(staticDir, "no-image.png");
-  const thumbnailFile = path.join(thumbnailDir, util.format("no-image-thumbnail-%sx%s", width, height));
-  //
-  return resizeAndCropImage.bind(this)({ originFile, thumbnailFile, width, height });
-}
-
-function createImageThumbnail ({ uploadDir, thumbnailDir, fileId, fileName, width, height } = {}) {
-  const originFile = path.join(uploadDir, fileId, fileName);
-  const thumbnailFile = path.join(thumbnailDir, fileId, util.format("thumbnail-%sx%s", width, height));
-  //
-  return resizeAndCropImage.bind(this)({ originFile, thumbnailFile, width, height });
-}
-
-function resizeAndCropImage (box) {
-  const { L, T } = this || {};
-  return new Promise(function(resolve, reject) {
-    fs.stat(box.thumbnailFile, function(err, stats) {
-      if (!err) {
-        return resolve(box.thumbnailFile);
-      }
-      // Note: ImageMagick may be not found
-      easyimage.rescrop({
-        src: box.originFile,
-        dst: box.thumbnailFile,
-        width: box.width,
-        height: box.height,
-        fill: true
-      }).then(
-        function(image) {
-          L && L.has("silly") && L.log("silly", T && T.toMessage({
-            text: " - Converted: " + image.width + " x " + image.height
-          }));
-          resolve(null, box.thumbnailFile);
-        },
-        function (err) {
-          L && L.has("silly") && L.log("silly", " - Error on creating thumbnail: %s", err);
-          reject(err);
-        }
-      );
-    });
-  });
 }
 
 function parseUploadFormData (req, ctx) {
