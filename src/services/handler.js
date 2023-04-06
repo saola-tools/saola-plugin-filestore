@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const util = require("util");
 const easyimage = require("easyimage");
@@ -61,6 +62,7 @@ function Portlet (params = {}) {
   const contextPath = portletConfig.contextPath || "/filestore";
   const uploadDir = portletConfig.uploadDir;
   const collectionName = portletConfig.collections.FILE;
+  const tmpRootDir = _osTmpDir() + portletConfig.tmpBasePath || "/saola-plugin-filestore";
 
   this.getFileInfo = function (fileId) {
     return mongoManipulator.findOneDocument(collectionName, {
@@ -160,6 +162,10 @@ function Portlet (params = {}) {
     });
   };
 
+  this.transferFileToOutputStream = function(fileLocationPath, outputStream) {
+    return transferFileToOutputStream.call(this, fileLocationPath, outputStream);
+  };
+
   this.createImageThumbnail = function(fileContext, {thumbnailDir, uploadDir} = {}) {
     const { fileInfo } = fileContext;
     if (lodash.isEmpty(fileInfo) || lodash.isEmpty(fileInfo.name)) {
@@ -179,6 +185,10 @@ function Portlet (params = {}) {
       });
     }
   };
+
+  this.getTmpRootDir = function () {
+    return tmpRootDir;
+  };
 };
 
 Handler.referenceHash = {
@@ -188,6 +198,23 @@ Handler.referenceHash = {
 };
 
 module.exports = Handler;
+
+function transferFileToOutputStream (fileLocationPath, outputStream) {
+  const { L, T } = this || {};
+  return new Promise(function(resolve, reject) {
+    const filestream = fs.createReadStream(fileLocationPath);
+    filestream.on("error", function(err) {
+      reject(err);
+    });
+    filestream.on("end", function() {
+      L && L.has("silly") && L.log("silly", T && T.toMessage({
+        text: " - the file has been full-loaded"
+      }));
+      resolve();
+    });
+    filestream.pipe(outputStream);
+  });
+}
 
 function getImageNotFoundThumbnail ({ staticDir, thumbnailDir, width, height } = {}) {
   staticDir = staticDir || path.join(__dirname, "../../data/");
@@ -234,4 +261,8 @@ function resizeAndCropImage (box) {
       );
     });
   });
+}
+
+function _osTmpDir () {
+  return os.tmpdir();
 }

@@ -1,8 +1,6 @@
 "use strict";
 
-const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
 const formidable = require("formidable");
 const mime = require("mime");
@@ -54,7 +52,7 @@ function Portlet (params = {}) {
 
   const contextPath = portletConfig.contextPath || "/filestore";
 
-  const tmpRootDir = os.tmpdir() + portletConfig.tmpBasePath || "/saola-plugin-filestore";
+  const tmpRootDir = filestoreHandler.getTmpRootDir();
   const uploadDir = portletConfig.uploadDir;
   const thumbnailDir = portletConfig.thumbnailDir || uploadDir;
   const thumbnailCfg = lodash.pick(portletConfig, ["thumbnailMaxWidth", "thumbnailMaxHeight"]);
@@ -180,7 +178,7 @@ function createDownloadFileMiddleware (context) {
       const filename = stringUtil.slugify(originalName);
       const filepath = path.join(uploadDir, fileInfo.fileId, fileInfo.name);
       const mimetype = getMimeType(filepath);
-      return transferFileToResponse.bind(that)(filename, filepath, mimetype, res);
+      return transferFileToResponse.call(that, filestoreHandler, filename, filepath, mimetype, res);
     })
     .catch(function(err) {
       renderErrorToResponse({ action: "download" }, err, res);
@@ -279,7 +277,7 @@ function createShowPictureMiddleware (context) {
       const originalName = box.fileInfo.name;
       const filename = stringUtil.slugify(originalName);
       const mimetype = getMimeType(thumbnailFile);
-      return transferFileToResponse.bind(that)(filename, thumbnailFile, mimetype, res);
+      return transferFileToResponse.call(that, filestoreHandler, filename, thumbnailFile, mimetype, res);
     })
     .catch(function(err) {
       renderErrorToResponse({ action: "thumbnail" }, err, res);
@@ -370,31 +368,14 @@ function parseUploadFormData (req, ctx) {
   });
 }
 
-function transferFileToResponse (filename, fileLocationPath, mimetype, res) {
+function transferFileToResponse (filestoreHandler, filename, fileLocationPath, mimetype, res) {
   const { L, T } = this || {};
   L && L.has("silly") && L.log("silly", T && T.add({ filename, mimetype }).toMessage({
     text: " - The file [${filename}] (${mimetype}) is downloading"
   }));
   res.setHeader("Content-disposition", "attachment; filename=" + filename);
   res.setHeader("Content-type", mimetype);
-  return transferFileToOutputStream.call(this, fileLocationPath, res);
-}
-
-function transferFileToOutputStream (fileLocationPath, outputStream) {
-  const { L, T } = this || {};
-  return new Promise(function(resolve, reject) {
-    const filestream = fs.createReadStream(fileLocationPath);
-    filestream.on("error", function(err) {
-      reject(err);
-    });
-    filestream.on("end", function() {
-      L && L.has("silly") && L.log("silly", T && T.toMessage({
-        text: " - the file has been full-loaded"
-      }));
-      resolve();
-    });
-    filestream.pipe(outputStream);
-  });
+  return filestoreHandler.transferFileToOutputStream(fileLocationPath, res);
 }
 
 function renderErrorToResponse (context, error, res) {
