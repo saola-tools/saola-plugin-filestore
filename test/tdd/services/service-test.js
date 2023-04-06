@@ -104,7 +104,7 @@ describe("filestoreService", function() {
     let Service, getMimeType;
 
     beforeEach(function() {
-      Service = mockit.acquire("service", serviceLocation);
+      Service = mockit.acquire("handler", serviceLocation);
       getMimeType = mockit.get(Service, "getMimeType");
     });
 

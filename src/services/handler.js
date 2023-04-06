@@ -5,6 +5,7 @@ const os = require("os");
 const path = require("path");
 const util = require("util");
 const easyimage = require("easyimage");
+const mime = require("mime");
 const mv = require("mv");
 const uuid = require("uuid");
 
@@ -189,6 +190,10 @@ function Portlet (params = {}) {
   this.getTmpRootDir = function () {
     return tmpRootDir;
   };
+
+  this.getMimeType = function (fileLocationPath, { basePath } = {}) {
+    return getMimeType(fileLocationPath);
+  };
 };
 
 Handler.referenceHash = {
@@ -266,3 +271,11 @@ function resizeAndCropImage (box) {
 function _osTmpDir () {
   return os.tmpdir();
 }
+
+function getMimeType (fileNameOrPath) {
+  const mimeType = mime.getType(fileNameOrPath);
+  if (mimeType == null) {
+    return "application/octet-stream";
+  }
+  return mimeType;
+};

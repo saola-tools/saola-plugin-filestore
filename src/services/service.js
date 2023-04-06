@@ -3,7 +3,6 @@
 const path = require("path");
 
 const formidable = require("formidable");
-const mime = require("mime");
 const uuid = require("uuid");
 
 const FRWK = require("@saola/core");
@@ -177,7 +176,7 @@ function createDownloadFileMiddleware (context) {
       const originalName = fileInfo.name || path.basename(fileInfo.path);
       const filename = stringUtil.slugify(originalName);
       const filepath = path.join(uploadDir, fileInfo.fileId, fileInfo.name);
-      const mimetype = getMimeType(filepath);
+      const mimetype = filestoreHandler.getMimeType(filepath);
       return transferFileToResponse.call(that, filestoreHandler, filename, filepath, mimetype, res);
     })
     .catch(function(err) {
@@ -276,7 +275,7 @@ function createShowPictureMiddleware (context) {
       //
       const originalName = box.fileInfo.name;
       const filename = stringUtil.slugify(originalName);
-      const mimetype = getMimeType(thumbnailFile);
+      const mimetype = filestoreHandler.getMimeType(thumbnailFile);
       return transferFileToResponse.call(that, filestoreHandler, filename, thumbnailFile, mimetype, res);
     })
     .catch(function(err) {
@@ -323,14 +322,6 @@ class ThumbnailFrameMatcher {
     }
     return null;
   }
-}
-
-function getMimeType (fileNameOrPath) {
-  const mimeType = mime.getType(fileNameOrPath);
-  if (mimeType == null) {
-    return "application/octet-stream";
-  }
-  return mimeType;
 }
 
 function parseUploadFormData (req, ctx) {
